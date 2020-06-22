@@ -2,6 +2,8 @@ import tkinter as tk
 import numpy as np
 import board as bd 
 import scoring as sc
+from sgfmill import sgf
+from tkinter import messagebox, simpledialog
 
 class Game_Gui:
 
@@ -24,7 +26,8 @@ class Game_Gui:
 		self.the_turn = tk.StringVar()
 		self.my_score = tk.StringVar()
 		self.new_game_bt_txt = tk.StringVar()
-
+		self.save_bt_txt = tk.StringVar()
+		
 		# actual labels for storing info
 		self.pris_lab = None
 		self.turn_lab = None
@@ -50,6 +53,7 @@ class Game_Gui:
 		self.prisoners.set("Black's Prisoners: 0   White's Prisoners: 0")
 		self.my_score.set("Black Score: 0   White Score: 5.5")
 		self.new_game_bt_txt.set("New Game")
+		self.save_bt_txt.set("Save")
 
 		self.turn_lab = tk.Label(self.top_frame, textvariable = self.the_turn, height = 3)
 		self.turn_lab.pack(side = tk.LEFT, padx = 20)
@@ -61,10 +65,17 @@ class Game_Gui:
 		# Add the passing button
 		self.bt = tk.Button(self.top_frame, text = "Pass", command = self._pass_on_click)
 		self.bt.pack(side = tk.RIGHT, fill = tk.X)
+		
+		#TODO add a new button for "open SGF"
+		#This will copy the SGF tree format into my format
 
 		# Add the new game button
 		self.bt = tk.Button(self.top_frame, textvariable = self.new_game_bt_txt, 
 			command = self._new_game_on_click)
+		self.bt.pack(side = tk.RIGHT, fill = tk.X)
+
+		#TODO add a new button for "save SGF"
+		self.bt = tk.Button(self.top_frame, text = "Save", textvariable = self.save_bt_txt, command = self._save_on_click)
 		self.bt.pack(side = tk.RIGHT, fill = tk.X)
 
 	# second callback to change text of button while running for new game
@@ -79,8 +90,8 @@ class Game_Gui:
 	# stored action for new game on click
 	def _new_game_on_click(self):
 		self.new_game_bt_txt.set("Clearing Board...")
-		self.root.after(20, self._new_game_callback)
-
+		self.root.after(9, self._new_game_callback)
+	
 	# stored action for playing passing on click
 	def _pass_on_click(self):
 		move = (0, 0, 0) # final zero means pass
@@ -89,6 +100,18 @@ class Game_Gui:
 		if successful_move:
 			self._gui_update()
 			self.turn = bd.flip(self.turn) # after turn ends, you flip
+			
+	# Save the game into an sgf on clicking.
+	def _save_callback(self, game_name):
+		self.my_game.save_game(game_name)
+		self.save_bt_txt.set("Save")
+
+	# stored action for new game on click
+	def _save_on_click(self):
+		self.save_bt_txt.set("Saving...")
+		game_name = simpledialog.askstring("Save as", "What do you want to name your sgf?",
+                                parent=self.root)
+		self.root.after(9, self._save_callback(game_name))
 
 	# updates the score every click
 	def _update_score(self):
@@ -120,9 +143,9 @@ class Game_Gui:
 	# initially creates all the labels for the board
 	def create_board(self):
 		my_board = self.my_game.board
-		im_blck = tk.PhotoImage(file='~/Go/img/black.gif')
-		im_wht = tk.PhotoImage(file='~/Go/img/white.gif')
-		im_blnk = tk.PhotoImage(file='~/Go/img/blank.gif')
+		im_blck = tk.PhotoImage(file='./img/black.gif')
+		im_wht = tk.PhotoImage(file='./img/white.gif')
+		im_blnk = tk.PhotoImage(file='./img/blank.gif')
 		for i in range(self.size):
 			for j in range(self.size):
 				# try only updating when board changes
@@ -146,9 +169,9 @@ class Game_Gui:
 	# updates the images in the cell
 	def _alter_board_cell(self, my_board, i, j):
 		
-		im_blck = tk.PhotoImage(file='~/Go/img/black.gif')
-		im_wht = tk.PhotoImage(file='~/Go/img/white.gif')
-		im_blnk = tk.PhotoImage(file='~/Go/img/blank.gif')
+		im_blck = tk.PhotoImage(file='./img/black.gif')
+		im_wht = tk.PhotoImage(file='./img/white.gif')
+		im_blnk = tk.PhotoImage(file='./img/blank.gif')
 
 		label = self.label_grid[i,j]
 		if my_board[i,j] == 1:
@@ -204,7 +227,7 @@ class Game_Gui:
 			self._gui_update()
 			self.turn = bd.flip(self.turn) # after turn ends, you flip
 
-my_game_gui = Game_Gui(20, 5.5)
+my_game_gui = Game_Gui(9, 5.5)
 my_game_gui.create_board()
 my_game_gui.root.mainloop()
 

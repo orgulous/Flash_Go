@@ -1,10 +1,12 @@
 import numpy as np
+from sgfmill import sgf
 
 class Game:
 	def __init__(self, komi, board):
 		self.board = board
 		self.komi = komi
 		self.board_sz = len(board)
+		self.sgf_game = sgf.Sgf_game(size=len(board))
 
 		# keeps track of board history for 'ko' rule
 		self.board_hist = [np.copy(board)] 
@@ -13,6 +15,12 @@ class Game:
 		self.same_col_set = set([])
 		# keeps track for scoring
 		self.prisoners = {-1: 0, 1: 0}
+		
+	# method to return game tree
+	def save_game(self, game_name):
+		with open("./sgf_files/" + game_name + ".sgf", "wb") as f:
+			f.write(self.sgf_game.serialise())  
+
 
 	# function called from is_valid
 	# valid Moves must not be suicidal 
@@ -189,6 +197,36 @@ class Game:
 		y = move[1]
 		self.board[x,y] = move[2]
 
+	def _translate_move(self, move):
+		#print("unadjusted move")
+		if move[2] == 1:
+			color = 'w'
+		elif move[2] == -1:
+			color = 'b'
+		else:
+			print("ERROR")#some error
+		
+		x =  (self.board_sz - 1) - move[0] 
+		y = move[1]
+		move = (x, y, color) 
+		#print("adjusted move")
+		#print(move)
+		
+		return move
+	
+	# keeps track of the SGF Tree for outputting
+	def _update_sgf_tree(self, move):
+		node = self.sgf_game.extend_main_sequence()
+		move = self._translate_move(move)
+		print("move[0]", move[0])
+		print("move[1]", move[1])
+		print("move[2]", move[2])
+	
+		node.set_move(move[2], (move[0], move[1]))
+		#if move_info.comment is not None:
+		#	node.set("C", move_info.comment)
+
+
 	# the main entry point into board logic and board updating
 	def update(self, move):
 
@@ -199,9 +237,13 @@ class Game:
 		
 		# make sure move is valid before placing
 		if self._is_valid(move):
+			#print(move)
 			self._place_piece(move)
 			self._life_and_death(move)
 			self.board_hist.append(np.copy(self.board))
+			self._update_sgf_tree(move)
+			#add move to a SGF tree
+			#sgf_w
 
 			return True
 		else:
