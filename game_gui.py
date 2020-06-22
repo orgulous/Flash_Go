@@ -13,6 +13,7 @@ class Game_Gui:
 		self.komi = komi
 		self.size = size
 		self.my_game = bd.Game(komi, (np.zeros(shape = (size, size))).astype('int'))
+		# wrong self.my_game = bd.Game(komi, (np.array(shape = (size, size)), dtype=object))
 	
 		# gui elements
 		self.root = tk.Tk()
@@ -62,9 +63,9 @@ class Game_Gui:
 		self.score_lab = tk.Label(self.bottom_frame, textvariable = self.my_score, height = 3)
 		self.score_lab.pack(side = tk.RIGHT, padx = 20)
 
-		# Add the passing button
+		'''# Add the passing button NO LONGER NEEDED
 		self.bt = tk.Button(self.top_frame, text = "Pass", command = self._pass_on_click)
-		self.bt.pack(side = tk.RIGHT, fill = tk.X)
+		self.bt.pack(side = tk.RIGHT, fill = tk.X)'''
 		
 		#TODO add a new button for "open SGF"
 		#This will copy the SGF tree format into my format
@@ -76,6 +77,10 @@ class Game_Gui:
 
 		#TODO add a new button for "save SGF"
 		self.bt = tk.Button(self.top_frame, text = "Save", textvariable = self.save_bt_txt, command = self._save_on_click)
+		self.bt.pack(side = tk.RIGHT, fill = tk.X)
+		
+		# Add the variations button
+		self.bt = tk.Button(self.top_frame, text = "Variation", command = self._variation_on_click)
 		self.bt.pack(side = tk.RIGHT, fill = tk.X)
 
 	# second callback to change text of button while running for new game
@@ -92,6 +97,12 @@ class Game_Gui:
 		self.new_game_bt_txt.set("Clearing Board...")
 		self.root.after(9, self._new_game_callback)
 	
+	
+	# stored action for moving to variations
+	def _variation_on_click(self):
+		self.turn = 2
+	
+	'''
 	# stored action for playing passing on click
 	def _pass_on_click(self):
 		move = (0, 0, 0) # final zero means pass
@@ -100,6 +111,7 @@ class Game_Gui:
 		if successful_move:
 			self._gui_update()
 			self.turn = bd.flip(self.turn) # after turn ends, you flip
+	'''
 			
 	# Save the game into an sgf on clicking.
 	def _save_callback(self, game_name):
@@ -131,10 +143,13 @@ class Game_Gui:
 			+ "White's Prisoners: " + str(prsn[-1])
 		self.prisoners.set(prsn_sts)
 		
-		# 2 - update turn (oppsite turn now)
-		flip_turn = bd.flip(self.turn) 
-		turn_txt = "Black" if flip_turn == -1 else "White"
-		turn_sts = "Turn: " + turn_txt 
+		# 2 - update turn (oppsite turn now). Or update to variations
+		if isinstance(self.turn, int):
+			flip_turn = bd.flip(self.turn) 
+			turn_txt = "Black" if flip_turn == -1 else "White"
+			turn_sts = "Turn: " + turn_txt 
+		else:
+			turn_sts = "Variations"
 		self.the_turn.set(turn_sts)
 		
 		# 3 - update score
@@ -172,8 +187,13 @@ class Game_Gui:
 		im_blck = tk.PhotoImage(file='./img/black.gif')
 		im_wht = tk.PhotoImage(file='./img/white.gif')
 		im_blnk = tk.PhotoImage(file='./img/blank.gif')
+		im_1 = tk.PhotoImage(file='./img/v1.gif')
+		im_2 = tk.PhotoImage(file='./img/v2.gif')
 
 		label = self.label_grid[i,j]
+		
+		print("Alter board cell value")
+		print(my_board[i,j])
 		if my_board[i,j] == 1:
 			label.configure(im = im_wht)
 			label.image = im_wht
@@ -183,6 +203,12 @@ class Game_Gui:
 		elif my_board[i,j] == -1:
 			label.configure(im = im_blck)
 			label.image = im_blck
+		elif my_board[i,j] == 2:
+			label.configure(im = im_1)
+			label.image = im_1
+		elif my_board[i,j] == "v2":
+			label.configure(im = im_2)
+			label.image = im_2
 		else:
 			raise ValueError
 
@@ -217,15 +243,19 @@ class Game_Gui:
 
 	# continue to wait for the event. This is the main updating loop
 	def _on_click(self, i, j, event):
+	
 		move = i, j, self.turn
-
+		
 		# all logic on board updating is contained here
-		successful_move = self.my_game.update(move) 
-
 		# takes the game board and then updates it.
+		successful_move = self.my_game.update(move) 
+		
 		if successful_move:
 			self._gui_update()
-			self.turn = bd.flip(self.turn) # after turn ends, you flip
+			# This means it's an annotation mode
+			if isinstance((self.turn), int):
+								
+				self.turn = bd.flip(self.turn) # after turn ends, you flip
 
 my_game_gui = Game_Gui(9, 5.5)
 my_game_gui.create_board()

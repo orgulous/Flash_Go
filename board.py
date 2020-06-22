@@ -97,7 +97,11 @@ class Game:
 		
 	# Greedy boolean evaluation to see if it is valid
 	def _is_valid(self, move):
-		if self.board[move[0], move[1]] == 0:
+		if move[2] == 2:
+			print("It's a variation, coded as 2. This is it below.")
+			print(move[2])
+			return True
+		elif self.board[move[0], move[1]] == 0:
 			if self._not_suicidal(move):
 				if self._ko_rule_valid(move):
 					return True
@@ -195,37 +199,50 @@ class Game:
 	def _place_piece(self, move):
 		x = move[0]
 		y = move[1]
+		print("Adding this to grid board")
+		print(move[2])
 		self.board[x,y] = move[2]
 
 	def _translate_move(self, move):
-		#print("unadjusted move")
-		if move[2] == 1:
+		#print("unadjusted move") 
+		# TODO change this to proper logic
+		if (move[2] == 1):
 			color = 'w'
-		elif move[2] == -1:
+		elif (move[2] == -1):
 			color = 'b'
 		else:
-			print("ERROR")#some error
+			color = move[2]
+			# TODO This needs to update the sgf tree properly
+			print("It's a variation")#some error
 		
 		x =  (self.board_sz - 1) - move[0] 
 		y = move[1]
 		move = (x, y, color) 
-		#print("adjusted move")
-		#print(move)
+		print("adjusted move")
+		print(move)
 		
 		return move
 	
 	# keeps track of the SGF Tree for outputting
 	def _update_sgf_tree(self, move):
+	
 		node = self.sgf_game.extend_main_sequence()
 		move = self._translate_move(move)
+		
+		#Print to see whats updating
 		print("move[0]", move[0])
 		print("move[1]", move[1])
 		print("move[2]", move[2])
 	
-		node.set_move(move[2], (move[0], move[1]))
+		reg_move = (move[2] is 'b' or move[2] is 'w')
+
+		if reg_move: 
+			node.set_move(move[2], (move[0], move[1]))
+		else:
+			# TODO This needs to update the sgf tree properly
+			print("TODO make this accept the new variation. You will have to delete the 'if")
 		#if move_info.comment is not None:
 		#	node.set("C", move_info.comment)
-
 
 	# the main entry point into board logic and board updating
 	def update(self, move):
@@ -233,17 +250,21 @@ class Game:
 		# Player 'passes' in move, move color is '0'
 		if move[2] == 0:
 			self.board_hist.append(np.copy(self.board))
-			return True	
+			return True
+		#elif isinstance(move[2], str):
+		#	print("Need to add variation to tree")
+		#	return True
 		
 		# make sure move is valid before placing
 		if self._is_valid(move):
 			#print(move)
 			self._place_piece(move)
-			self._life_and_death(move)
+			
+			# TODO need move to be a class now
+			if (move[2] != 2):
+				self._life_and_death(move)
 			self.board_hist.append(np.copy(self.board))
 			self._update_sgf_tree(move)
-			#add move to a SGF tree
-			#sgf_w
 
 			return True
 		else:
@@ -255,6 +276,8 @@ def flip(turn):
 		return 1				
 	elif turn is 1:
 		return -1
+	elif turn is 2: #TODO, CHANGE THIS MOVE/turn THING 	again into MODE 
+		return turn
 	else:
 		raise ValueError
 
