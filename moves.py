@@ -7,7 +7,7 @@ from sgfmill import sgf
 class GridPoint:
 	def __init__(self, color, np_x, np_y, var_num, size):
 		self.color = color # 'blnk', 'b', 'w'
-		self.my_var_num = var_num
+		self.variation_num = var_num
 		self.np_x = np_x
 		self.np_y = np_y
 		
@@ -22,6 +22,12 @@ class GridPoint:
 			
 	def remove_stone(self):
 		self.color = 'blnk'
+		
+	def pt_is_equal(self, new_grid_pt):
+		bool_col = self.color == new_grid_pt.color
+		bool_var = self.variation_num == new_grid_pt.variation_num
+		
+		return bool_col and bool_var
 		
 # This type tracks the state of the game.
 # It controls what kinds of pieces get placed on a click

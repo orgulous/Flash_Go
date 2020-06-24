@@ -68,29 +68,7 @@ class Game:
 	def _place_piece(self, grid_pt):
 		self.board[grid_pt.np_x, grid_pt.np_y] = grid_pt
 		
-	'''
-	# keeps track of the SGF Tree for outputting
-	def _update_sgf_tree(self, move):
-	
-		node = self.sgf_game.extend_main_sequence()
-		move = self._translate_move(move)
-		
-		#Print to see whats updating
-		print("move[0]", move[0])
-		print("move[1]", move[1])
-		print("move[2]", move[2])
-	
-		reg_move = (move[2] is 'b' or move[2] is 'w')
 
-		if reg_move: 
-			node.set_move(move[2], (move[0], move[1]))
-		else:
-			# TODO This needs to update the sgf tree properly
-			print("TODO make this accept the new variation. You will have to delete the 'if")
-		#if move_info.comment is not None:
-		#	node.set("C", move_info.comment)
-		
-	'''
 	# looks in four directions to return list of directions to check
 	def _get_cardinal_directions(self, grid_pt):
 		# check life and death for all for directions
@@ -221,7 +199,7 @@ class Game:
 			self.liberties = 0
 			self.same_col_set = set([])
 
-
+	# Get rid of soon
 	def _board_equality(self):
 		#np_equality = np.equal(,  dtype=np.object)
 		equal_bool = True
@@ -291,20 +269,33 @@ class Game:
 			return False
 
 
+	# keeps track of the SGF Tree for outputting
+	def _update_sgf_tree(self, grid_pt, game_state):
+	
+		node = self.sgf_game.extend_main_sequence()
+		
+		if game_state.variation == False:
+			node.set_move(grid_pt.color, (grid_pt.sgf_x, grid_pt.sgf_y))
+		elif game_state.variation == True:
+			var_str = str(game_state.variation_num)
+			node.set('LB', [((grid_pt.sgf_x, grid_pt.sgf_y), var_str)])
+		else:
+			raise ValueError
+
 	# the main entry point into board logic and board updating
 	def update(self, grid_pt, game_state):
 	
 		#self.working_state = copy
 		
 		if game_state.variation == True:
-			print("Need to add variation to tree")
-			return True
-		
-		# Player 'passes' in move
-		elif game_state.turn == 'p':
-		
-			# TODO check where this gets flipped...
-			self.board_hist.append(copy.deepcopy(self.board))
+			clicked_sq = self.board[grid_pt.np_x, grid_pt.np_y]
+			if clicked_sq.is_blnk():
+				# print("variation set Before")
+				# print(self.board[grid_pt.np_x, grid_pt.np_y].variation_n
+				clicked_sq.variation_num = game_state.variation_num
+	
+				self.board_hist.append(copy.deepcopy(self.board))
+				self._update_sgf_tree(grid_pt, game_state) 
 			return True
 		
 		# make sure move is valid before placing
@@ -312,10 +303,11 @@ class Game:
 			if self._is_valid(grid_pt):
 				print("The piece is valid, getting placed")
 				self._place_piece(grid_pt)
-				#print("Running L/D for placed piece")
 				self._life_and_death(grid_pt)
 				self.board_hist.append(copy.deepcopy(self.board))
-				''' self._update_sgf_tree(move) '''
+				
+				# update SGF tree
+				self._update_sgf_tree(grid_pt, game_state) 
 				return True
 			else:
 				return False

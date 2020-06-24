@@ -99,6 +99,8 @@ class Game_Gui:
 		self.my_game = self._make_game(self.size, self.komi)
 
 		self.game_state.turn = 'b'
+		self.game_state.variation_num = 0
+		self.game_state.variation = False
 		self.the_turn.set("Turn: Black")
 		self._gui_update()
 		self.new_game_bt_txt.set("New Game")
@@ -112,20 +114,21 @@ class Game_Gui:
 	
 	# stored action for moving to variations
 	def _variation_on_click(self):
-		self.turn = 2
+		self.game_state.make_variation()
 	
+	'''
 	# stored action for playing passing on click
 	def _pass_on_click(self):
 		self.game_state.flip()
 		
-		'''
+
 		move = (0, 0, 0) # final zero means pass
 		successful_move = self.my_game.update(move) 
 
 		if successful_move:
 			self._gui_update()
 			self.turn = bd.flip(self.turn) # after turn ends, you flip
-		'''
+	'''
 			
 	# Save the game into an sgf on clicking.
 	def _save_callback(self, game_name):
@@ -138,17 +141,7 @@ class Game_Gui:
 		game_name = simpledialog.askstring("Save as", "What do you want to name your sgf?",
                                 parent=self.root)
 		self.root.after(9, self._save_callback(game_name))
-
-
-	##NO MORE SCORING. DELETE
-	''' def _update_score(self):
-		score_obj = sc.Scoring(self.my_game)
-		score_dict = score_obj.score_it()
-		score_sts = "Black Score: " + str(score_dict['b']) + "   " \
-			+ "White Score: " + str(score_dict['w'])
-		self.my_score.set(score_sts)
-	'''
-
+		
 	# All of these get new text values of the status bar
 	def _update_status(self):
 
@@ -162,7 +155,7 @@ class Game_Gui:
 		# 2 - update turn (oppsite turn now). Or update to variations
 		
 		if not self.game_state.is_variation():	
-			turn_txt = "Black" if self.game_state.turn == 'b' else "White"
+			turn_txt = "White" if self.game_state.turn == 'b' else "Black"
 			turn_sts = "Turn: " + turn_txt 
 		else:
 			turn_sts = "Variations"
@@ -201,6 +194,7 @@ class Game_Gui:
 			
 	# updates the images in the cell
 	def _alter_board_cell(self, my_board, i, j):
+		#print("Now altering, ", i, j)
 		
 		im_blck = tk.PhotoImage(file='./img/black.gif')
 		im_wht = tk.PhotoImage(file='./img/white.gif')
@@ -212,7 +206,18 @@ class Game_Gui:
 		bd_pt = my_board[i,j].color
 		
 
-		if bd_pt == 'w':
+		bd_var_num = my_board[i,j].variation_num		
+		#print("bd_var_num ", bd_var_num)
+		
+		# Need to do the variations 1st because they override
+		if bd_var_num == 1:
+			label.configure(im = im_1)
+			label.image = im_1
+		elif bd_var_num == 2:
+			label.configure(im = im_2)
+			label.image = im_2
+					
+		elif bd_pt == 'w':
 			label.configure(im = im_wht)
 			label.image = im_wht
 		elif bd_pt == 'blnk':
@@ -221,23 +226,36 @@ class Game_Gui:
 		elif bd_pt == 'b':
 			label.configure(im = im_blck)
 			label.image = im_blck
-		elif bd_pt == "v1":
-			label.configure(im = im_1)
-			label.image = im_1
-		elif bd_pt == "v2":
-			label.configure(im = im_2)
-			label.image = im_2
+
+
 		else:
-			raise ValueError
+			print("haven't gotten to more vairations")
+			# raise ValueError
 
 	# test to see if board changed in a spot, to see if you need new label
 	def _board_changed(self, my_board, i, j):
+		
+		# various print statement diagnoses
+		'''if (i == 0 and j == 0):
+			print("Var Value at 0,0. For self.my_board_hist[-1]", self.my_game.board_hist[-1][0,0].variation_num)
+			print("Should be the same as this")
+			print("Var Value at 0,0", my_board[0,0].variation_num)
+			
+			print("color Value at 0,0. For self.my_board_hist[-1]", self.my_game.board_hist[-1][0,0].color)
+			print("Should be the same as this")
+			print("color Value at 0,0", my_board[0,0].color)'''
 		try:
-			old_state = self.my_game.board_hist[-2][i, j]
-			new_state = my_board[i,j]
-			if old_state == new_state:
+			old_state_pt = self.my_game.board_hist[-2][i, j]
+			new_state_pt = my_board[i,j]
+			
+			# if old_state_pt == new_state_pt:
+			if old_state_pt.pt_is_equal(new_state_pt):
+				#if (i == 0 and j == 0):
+					#print("They are equal at 0,0")
 				return False
 			else:
+				#if (i == 0 and j == 0):
+					#print("They are NOT equal at 0,0")
 				return True
 		except:
 			return False
@@ -261,22 +279,31 @@ class Game_Gui:
 
 	# continue to wait for the event. This is the main updating loop
 	def _on_click(self, i, j, event):
+		print("~~~~~~~~~~~~~~~~~~~~~~")
+		print("~~~~~~~~~~~~~~~~~~~~~~")
+		my_state = self.game_state
+	
+		if my_state.variation == True:
+			my_state.variation_num = my_state.variation_num + 1
 	
 		# TODO variation number
-		grid_pt = moves.GridPoint(self.game_state.turn, i, j, 0, self.size)
+		grid_pt = moves.GridPoint(my_state.turn, i, j, my_state.variation_num, self.size)
 		
 
 		
 		# all logic on board updating is contained here
 		# takes the game board and then updates it.
-		successful_move = self.my_game.update(grid_pt, self.game_state) 
+		successful_move = self.my_game.update(grid_pt, my_state) 
 		
 		if successful_move:
+
+			print("successful move at, ", grid_pt.np_x, grid_pt.np_y)
+			
 			self._gui_update()
 			
 			# Flip if not a pass
-			if (self.game_state.is_variation() == False):
-				self.game_state.flip()
+			if (my_state.is_variation() == False):
+				my_state.flip()
 
 
 my_game_gui = Game_Gui(9, 5.5)
