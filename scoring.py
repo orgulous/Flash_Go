@@ -9,7 +9,7 @@ class Scoring:
 		self.komi = game.komi
 		self.board_sz = len(game.board)
 		self.prisoners = game.prisoners
-		self.score = {-1: 0, 1: 0}
+		self.score = {'b': 0, 'w': 0}
 		
 		# sets for calculating score inside recursion 
 		# global variables prevent storing sets recursively, much better 
@@ -39,9 +39,9 @@ class Scoring:
 			
 			# second condition to prevent scoring 1st and second move of game
 			if has_black and (potential_score < self.board_sz ** 2 - 2):
-				self.score[-1] += potential_score
+				self.score['b'] += potential_score
 			elif has_white and (potential_score < self.board_sz ** 2 - 2): 
-				self.score[1] += potential_score
+				self.score['w'] += potential_score
 			else:
 				pass
 
