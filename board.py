@@ -1,6 +1,7 @@
 import numpy as np
 import moves
 from sgfmill import sgf
+from sgfmill import boards
 import copy
 
 class Game:
@@ -16,15 +17,17 @@ class Game:
 	
 		self.liberties = 0
 		self.same_col_set = set([])
-		# keeps track for scoring
+		
+		# keeps track for scoring (unusued now)
 		self.prisoners = {'b': 0, 'w': 0}
 		
 	# method to return game tree
 	def save_game(self, game_name):
 		with open("./sgf_files/" + game_name + ".sgf", "wb") as f:
 			f.write(self.sgf_game.serialise())  
-
-
+			
+	#def open_game():
+	#	with 
 
 	'''
 	The main recursive algorithm for flood_fill.
@@ -133,7 +136,6 @@ class Game:
 		if captures_anything is False:
 			#print("Nothing is captured")
 			# check CURRENT color liberties
-			#self._flood_fill_liberties((move[0], move[1]), move[2])
 			self._flood_fill_liberties((grid_pt.np_x, grid_pt.np_y), grid_pt.color)
 
 			# placing the piece gives 0 liberties. suicidal
@@ -322,3 +324,25 @@ def in_board(elem, sz):
 		return True
 	else:
 		return False
+	
+# function for opening an sgf from game_gui.py
+def open_sgf(game):
+  
+	komi = game.get_komi()
+	board_sz = game.get_size()
+	
+	
+	moves = game.get_main_sequence() # ls of Tree_node
+	##print(moves)
+	for elem in moves:
+		print("~~~")
+		print("elem", elem)
+		if elem.has_property("B") or elem.has_property("W"):
+			print("its a move ", elem.get_move())
+		elif elem.has_property("LB"):
+			print("its a label ", elem.get('LB'))
+	
+	#my_array = np.ndarray(shape = (board_sz, board_sz), dtype=object)
+	
+	
+	#new_board = bd.Game(komi, my_array)

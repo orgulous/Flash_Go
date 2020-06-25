@@ -1,10 +1,9 @@
 import tkinter as tk
 import numpy as np
 import board as bd 
-import scoring as sc
 import moves
-from sgfmill import sgf
-from tkinter import messagebox, simpledialog
+from sgfmill import sgf, sgf_moves, ascii_boards
+from tkinter import messagebox, simpledialog, filedialog
 
 class Game_Gui:
 
@@ -24,16 +23,13 @@ class Game_Gui:
 		self.bottom_frame = tk.Frame(self.root)
 
 		# text variables for the labels
-		self.prisoners = tk.StringVar()
 		self.the_turn = tk.StringVar()
-		self.my_score = tk.StringVar()
+
 		self.new_game_bt_txt = tk.StringVar()
 		self.save_bt_txt = tk.StringVar()
 		
 		# actual labels for storing info
-		self.pris_lab = None
 		self.turn_lab = None
-		self.score_lab = None
 
 		# stores references to each label for new update
 		self.label_grid = np.ndarray(shape=(size,size), dtype=object)
@@ -62,38 +58,31 @@ class Game_Gui:
 		self.bottom_frame.pack(side = tk.TOP, fill = tk.X)
 
 		# set default text values for status var
-		self.prisoners.set("Black's Prisoners: 0   White's Prisoners: 0")
-		self.my_score.set("Black Score: 0   White Score: 5.5")
 		self.new_game_bt_txt.set("New Game")
 		self.save_bt_txt.set("Save")
 
 		self.turn_lab = tk.Label(self.top_frame, textvariable = self.the_turn, height = 3)
 		self.turn_lab.pack(side = tk.LEFT, padx = 20)
-		self.pris_lab = tk.Label(self.bottom_frame, textvariable = self.prisoners, height = 3)
+		self.pris_lab = tk.Label(self.bottom_frame, textvariable = "Whatever", height = 3)
 		self.pris_lab.pack(side = tk.LEFT, padx = 20)
-		self.score_lab = tk.Label(self.bottom_frame, textvariable = self.my_score, height = 3)
-		self.score_lab.pack(side = tk.RIGHT, padx = 20)
-
-		'''# Add the passing button NO LONGER NEEDED
-		self.bt = tk.Button(self.top_frame, text = "Pass", command = self._pass_on_click)
-		self.bt.pack(side = tk.RIGHT, fill = tk.X)'''
-		
-		#TODO add a new button for "open SGF"
-		#This will copy the SGF tree format into my format
 
 		# Add the new game button
 		self.bt = tk.Button(self.top_frame, textvariable = self.new_game_bt_txt, 
 			command = self._new_game_on_click)
 		self.bt.pack(side = tk.RIGHT, fill = tk.X)
 
-		#TODO add a new button for "save SGF"
-		self.bt = tk.Button(self.top_frame, text = "Save", textvariable = self.save_bt_txt, command = self._save_on_click)
-		self.bt.pack(side = tk.RIGHT, fill = tk.X)
-		
 		# Add the variations button
 		self.bt = tk.Button(self.top_frame, text = "Variation", command = self._variation_on_click)
 		self.bt.pack(side = tk.RIGHT, fill = tk.X)
-
+		
+		# save SGF button
+		self.bt = tk.Button(self.top_frame, text = "Save", textvariable = self.save_bt_txt, command = self._save_on_click)
+		self.bt.pack(side = tk.RIGHT, fill = tk.X)
+	
+		# open SGF button
+		self.bt = tk.Button(self.top_frame, text = "Open",  command = self._open_on_click)
+		self.bt.pack(side = tk.RIGHT, fill = tk.X)
+			
 	# second callback to change text of button while running for new game
 	def _new_game_callback(self):
 		self.my_game = self._make_game(self.size, self.komi)
@@ -110,26 +99,33 @@ class Game_Gui:
 	def _new_game_on_click(self):
 		self.new_game_bt_txt.set("Clearing Board...")
 		self.root.after(9, self._new_game_callback)
-	
-	
+		
 	# stored action for moving to variations
 	def _variation_on_click(self):
 		self.game_state.make_variation()
 	
-	'''
-	# stored action for playing passing on click
-	def _pass_on_click(self):
-		self.game_state.flip()
+	# Open an SGF file
+	def _open_on_click(self):
+		filename = filedialog.askopenfilename()
+		f = open(filename, "rb")
+		sgf_src = f.read()
+		f.close()
+		sgf_game = sgf.Sgf_game.from_bytes(sgf_src)
+		board, plays = sgf_moves.get_setup_and_moves(sgf_game)
+
+		for colour, move in plays:
+			if move is None:
+				continue
+			row, col = move
+			try:
+				board.play(row, col, colour)
+			except ValueError:
+				raise Exception("illegal move in sgf file")
+
+		print(ascii_boards.render_board(board))
+		#translate the board into my own board...
+		self.game_state = moves.GameState()
 		
-
-		move = (0, 0, 0) # final zero means pass
-		successful_move = self.my_game.update(move) 
-
-		if successful_move:
-			self._gui_update()
-			self.turn = bd.flip(self.turn) # after turn ends, you flip
-	'''
-			
 	# Save the game into an sgf on clicking.
 	def _save_callback(self, game_name):
 		self.my_game.save_game(game_name)
@@ -145,14 +141,7 @@ class Game_Gui:
 	# All of these get new text values of the status bar
 	def _update_status(self):
 
-		# 1 - update prisoners
-		prsn = self.my_game.prisoners
-		# captured prisoners are opposite color
-		prsn_sts = "Black's Prisoners: " + str(prsn['b']) + "   " \
-			+ "White's Prisoners: " + str(prsn['w'])
-		self.prisoners.set(prsn_sts)
-		
-		# 2 - update turn (oppsite turn now). Or update to variations
+		# 1 - update turn (oppsite turn now). Or update to variations
 		
 		if not self.game_state.is_variation():	
 			turn_txt = "White" if self.game_state.turn == 'b' else "Black"
@@ -161,9 +150,6 @@ class Game_Gui:
 			turn_sts = "Variations"
 		self.the_turn.set(turn_sts)
 		
-		# 3 - update score #NO MORE SCORING. DELETE
-		# self._update_score()
-
 	# initially creates all the labels for the board
 	def create_board(self):
 		my_board = self.my_game.board
@@ -226,8 +212,6 @@ class Game_Gui:
 		elif bd_pt == 'b':
 			label.configure(im = im_blck)
 			label.image = im_blck
-
-
 		else:
 			print("haven't gotten to more vairations")
 			# raise ValueError
@@ -236,26 +220,13 @@ class Game_Gui:
 	def _board_changed(self, my_board, i, j):
 		
 		# various print statement diagnoses
-		'''if (i == 0 and j == 0):
-			print("Var Value at 0,0. For self.my_board_hist[-1]", self.my_game.board_hist[-1][0,0].variation_num)
-			print("Should be the same as this")
-			print("Var Value at 0,0", my_board[0,0].variation_num)
-			
-			print("color Value at 0,0. For self.my_board_hist[-1]", self.my_game.board_hist[-1][0,0].color)
-			print("Should be the same as this")
-			print("color Value at 0,0", my_board[0,0].color)'''
 		try:
 			old_state_pt = self.my_game.board_hist[-2][i, j]
 			new_state_pt = my_board[i,j]
 			
-			# if old_state_pt == new_state_pt:
 			if old_state_pt.pt_is_equal(new_state_pt):
-				#if (i == 0 and j == 0):
-					#print("They are equal at 0,0")
 				return False
 			else:
-				#if (i == 0 and j == 0):
-					#print("They are NOT equal at 0,0")
 				return True
 		except:
 			return False
