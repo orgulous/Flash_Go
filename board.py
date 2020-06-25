@@ -326,6 +326,7 @@ def in_board(elem, sz):
 		return False
 	
 # function for opening an sgf from game_gui.py
+'''
 def open_sgf(game):
   
 	komi = game.get_komi()
@@ -346,3 +347,4 @@ def open_sgf(game):
 	
 	
 	#new_board = bd.Game(komi, my_array)
+'''
