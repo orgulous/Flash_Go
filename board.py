@@ -1,13 +1,13 @@
 import numpy as np
 import moves
-from sgfmill import sgf
+import board as bd
+from sgfmill import sgf, sgf_moves, ascii_boards
 from sgfmill import boards
 import copy
 
 class Game:
-	def __init__(self, komi, board):
-		self.board = board
-		self.komi = komi
+	def __init__(self, board):
+		self.board = board # numpy array of GridPoints
 		self.board_sz = len(board)
 		self.sgf_game = sgf.Sgf_game(size=len(board))
 
@@ -326,25 +326,39 @@ def in_board(elem, sz):
 		return False
 	
 # function for opening an sgf from game_gui.py
-'''
-def open_sgf(game):
+
+def open_sgf(filename):
   
-	komi = game.get_komi()
-	board_sz = game.get_size()
+	f = open(filename, "rb")
+	sgf_src = f.read()
+	f.close()
+	sgf_game = sgf.Sgf_game.from_bytes(sgf_src)
+	board, plays = sgf_moves.get_setup_and_moves(sgf_game)
 	
+	sz = sgf_game.get_size() 
 	
-	moves = game.get_main_sequence() # ls of Tree_node
-	##print(moves)
-	for elem in moves:
-		print("~~~")
-		print("elem", elem)
-		if elem.has_property("B") or elem.has_property("W"):
-			print("its a move ", elem.get_move())
-		elif elem.has_property("LB"):
-			print("its a label ", elem.get('LB'))
+	# makes new game
+	new_game = make_new_game(sz)
+	my_array = new_game.board
 	
-	#my_array = np.ndarray(shape = (board_sz, board_sz), dtype=object)
+	for color, move in plays:
+		if move is None:
+			continue
+		row, col = move
+		row = (new_game.board_sz - 1) - row
+		try:
+			my_array[row,col] = moves.GridPoint(color, row, col, 0, sz - 1)
+			#board.play(row, col, colour)
+		except ValueError:
+			raise Exception("illegal move in sgf file")
+	return new_game
+
+def make_new_game(size):
+	my_array = np.ndarray(shape = (size, size), dtype=object)
 	
+	for x in range(size):
+		for y in range(size):
+			my_array[x,y] = moves.GridPoint('blnk', x, y, 0, size)
 	
-	#new_board = bd.Game(komi, my_array)
-'''
+	new_game = bd.Game(my_array)
+	return new_game

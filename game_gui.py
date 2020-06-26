@@ -7,11 +7,10 @@ from tkinter import messagebox, simpledialog, filedialog
 
 class Game_Gui:
 
-	def __init__(self, size, komi):
+	def __init__(self, size):
 		# game logic elements	
-		self.komi = komi
 		self.size = size
-		self.my_game = self._make_game(size, komi)
+		self.my_game = bd.make_new_game(size) # Game type
 		self.game_state = moves.GameState()
 		# wrong self.my_game = bd.Game(komi, (np.array(shape = (size, size)), dtype=object))
 	
@@ -36,15 +35,7 @@ class Game_Gui:
 
 		self._set_gui_values()
 		
-	def _make_game(self, size, komi):
-		my_array = np.ndarray(shape = (size, size), dtype=object)
-		
-		for x in range(size):
-			for y in range(size):
-				my_array[x,y] = moves.GridPoint('blnk', x, y, 0, size)
-		
-		new_board = bd.Game(komi, my_array)
-		return new_board
+
 
 	def _set_gui_values(self):
 
@@ -85,7 +76,7 @@ class Game_Gui:
 			
 	# second callback to change text of button while running for new game
 	def _new_game_callback(self):
-		self.my_game = self._make_game(self.size, self.komi)
+		self.my_game = bd.make_new_game(self.size)
 
 		self.game_state.turn = 'b'
 		self.game_state.variation_num = 0
@@ -106,25 +97,13 @@ class Game_Gui:
 	
 	# Open an SGF file
 	def _open_on_click(self):
+
 		filename = filedialog.askopenfilename()
-		f = open(filename, "rb")
-		sgf_src = f.read()
-		f.close()
-		sgf_game = sgf.Sgf_game.from_bytes(sgf_src)
-		board, plays = sgf_moves.get_setup_and_moves(sgf_game)
-
-		for colour, move in plays:
-			if move is None:
-				continue
-			row, col = move
-			try:
-				board.play(row, col, colour)
-			except ValueError:
-				raise Exception("illegal move in sgf file")
-
-		print(ascii_boards.render_board(board))
-		#translate the board into my own board...
+		self.my_game = bd.open_sgf(filename)
+		
+		# TODO needs to reflect actual new game state?
 		self.game_state = moves.GameState()
+		self._gui_update()
 		
 	# Save the game into an sgf on clicking.
 	def _save_callback(self, game_name):
@@ -260,8 +239,6 @@ class Game_Gui:
 		# TODO variation number
 		grid_pt = moves.GridPoint(my_state.turn, i, j, my_state.variation_num, self.size)
 		
-
-		
 		# all logic on board updating is contained here
 		# takes the game board and then updates it.
 		successful_move = self.my_game.update(grid_pt, my_state) 
@@ -277,7 +254,7 @@ class Game_Gui:
 				my_state.flip()
 
 
-my_game_gui = Game_Gui(9, 5.5)
+my_game_gui = Game_Gui(9)
 my_game_gui.create_board()
 my_game_gui.root.mainloop()
 
