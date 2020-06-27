@@ -5,7 +5,7 @@ from sgfmill import sgf, sgf_moves, ascii_boards
 from sgfmill import boards
 import copy
 
-class Game:
+class Board:
 	def __init__(self, board):
 		self.board = board # numpy array of GridPoints
 		self.board_sz = len(board)
@@ -360,9 +360,6 @@ def open_sgf(filename):
 			my_array[row,col] = moves.GridPoint('blnk', row, col, var, sz - 1)
 			
 			print(row, col, var)
-	#if game_node.get_
-	#lb_node = sgf_game.get_last_node()
-	#print(lb_node.get_raw_list("LB"))
 	
 	return new_game
 
@@ -373,5 +370,5 @@ def make_new_game(size):
 		for y in range(size):
 			my_array[x,y] = moves.GridPoint('blnk', x, y, 0, size)
 	
-	new_game = bd.Game(my_array)
+	new_game = bd.Board(my_array)
 	return new_game
