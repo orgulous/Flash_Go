@@ -4,6 +4,7 @@ import board as bd
 import moves
 from sgfmill import sgf, sgf_moves, ascii_boards
 from tkinter import messagebox, simpledialog, filedialog
+from PIL import Image, ImageTk
 
 class Game_Gui:
 
@@ -12,7 +13,6 @@ class Game_Gui:
 		self.size = size
 		self.my_game = bd.make_new_game(size) # Game type
 		self.game_state = moves.GameState()
-		# wrong self.my_game = bd.Game(komi, (np.array(shape = (size, size)), dtype=object))
 	
 		# gui elements
 		self.root = tk.Tk()
@@ -22,7 +22,7 @@ class Game_Gui:
 		self.bottom_frame = tk.Frame(self.root)
 
 		# text variables for the labels
-		self.the_turn = tk.StringVar()
+		self.the_turn = tk.StringVar(value="Turn: Black")
 
 		self.new_game_bt_txt = tk.StringVar()
 		self.save_bt_txt = tk.StringVar()
@@ -34,8 +34,6 @@ class Game_Gui:
 		self.label_grid = np.ndarray(shape=(size,size), dtype=object)
 
 		self._set_gui_values()
-		
-
 
 	def _set_gui_values(self):
 
@@ -53,8 +51,8 @@ class Game_Gui:
 		self.save_bt_txt.set("Save")
 
 		self.turn_lab = tk.Label(self.top_frame, textvariable = self.the_turn, height = 3)
-		self.turn_lab.pack(side = tk.LEFT, padx = 20)
-		self.pris_lab = tk.Label(self.bottom_frame, textvariable = "Whatever", height = 3)
+		self.turn_lab.pack(side = tk.LEFT, padx = 30)
+		self.pris_lab = tk.Label(self.bottom_frame, textvariable = " ", height = 3)
 		self.pris_lab.pack(side = tk.LEFT, padx = 20)
 
 		# Add the new game button
@@ -75,47 +73,44 @@ class Game_Gui:
 		self.bt.pack(side = tk.RIGHT, fill = tk.X)
 			
 	# second callback to change text of button while running for new game
-	def _new_game_callback(self):
+	def _new_game_on_click(self):
 		self.my_game = bd.make_new_game(self.size)
 
 		self.game_state.turn = 'b'
 		self.game_state.variation_num = 0
 		self.game_state.variation = False
 		self.the_turn.set("Turn: Black")
-		self._gui_update()
 		self.new_game_bt_txt.set("New Game")
 		self.turn = 'w'
-
-	# stored action for new game on click
-	def _new_game_on_click(self):
-		self.new_game_bt_txt.set("Clearing Board...")
-		self.root.after(9, self._new_game_callback)
 		
+		# store the reference to label into here for future use
+		for i in range(self.size):
+			for j in range(self.size):
+				label = self.label_grid[i,j]
+				label.config(text=str(""), compound = 'center')
+		
+		self._gui_update()
+	
 	# stored action for moving to variations
 	def _variation_on_click(self):
 		self.game_state.make_variation()
+		self.game_state.variation_num = 0
 	
 	# Open an SGF file
 	def _open_on_click(self):
-
+		self._new_game_on_click()
 		filename = filedialog.askopenfilename()
 		self.my_game = bd.open_sgf(filename)
+		
 		
 		# TODO needs to reflect actual new game state?
 		self.game_state = moves.GameState()
 		self._gui_update()
 		
-	# Save the game into an sgf on clicking.
-	def _save_callback(self, game_name):
-		self.my_game.save_game(game_name)
-		self.save_bt_txt.set("Save")
-
 	# stored action for new game on click
 	def _save_on_click(self):
-		self.save_bt_txt.set("Saving...")
-		game_name = simpledialog.askstring("Save as", "What do you want to name your sgf?",
-                                parent=self.root)
-		self.root.after(9, self._save_callback(game_name))
+		game_name = simpledialog.askstring("Save as", "What do you want to name your sgf?", parent=self.root)
+		self.my_game.save_game(game_name)
 		
 	# All of these get new text values of the status bar
 	def _update_status(self):
@@ -134,14 +129,14 @@ class Game_Gui:
 		my_board = self.my_game.board
 		im_blck = tk.PhotoImage(file='./img/black.gif')
 		im_wht = tk.PhotoImage(file='./img/white.gif')
-		im_blnk = tk.PhotoImage(file='./img/blank.gif')
+		im_blnk = tk.PhotoImage(file='./img/center.gif')
 		for i in range(self.size):
 			for j in range(self.size):
 				# try only updating when board changes
 				bd_pt = my_board[i,j].color
 				
 				if bd_pt == 'blnk':
-					lab = tk.Label(self.game_frame, image = im_blnk, bd=0)
+					lab = tk.Label(self.game_frame, image = im_blnk, padx=0, pady=0, bd=0)
 					lab.image = im_blnk
 				elif bd_pt == 'w':
 					lab = tk.Label(self.game_frame, image = im_wht, bd=0)
@@ -159,11 +154,10 @@ class Game_Gui:
 			
 	# updates the images in the cell
 	def _alter_board_cell(self, my_board, i, j):
-		#print("Now altering, ", i, j)
 		
 		im_blck = tk.PhotoImage(file='./img/black.gif')
 		im_wht = tk.PhotoImage(file='./img/white.gif')
-		im_blnk = tk.PhotoImage(file='./img/blank.gif')
+		im_blnk = tk.PhotoImage(file='./img/center.gif')
 		im_1 = tk.PhotoImage(file='./img/v1.gif')
 		im_2 = tk.PhotoImage(file='./img/v2.gif')
 
@@ -171,18 +165,13 @@ class Game_Gui:
 		bd_pt = my_board[i,j].color
 		
 
-		bd_var_num = my_board[i,j].variation_num		
+		bd_var_num = my_board[i,j].variation_num	
+
+		if bd_var_num != 0:
+			label.config(text=str(bd_var_num), compound = 'center', font =('Helvetica', 18, 'bold'))
 		#print("bd_var_num ", bd_var_num)
 		
-		# Need to do the variations 1st because they override
-		if bd_var_num == 1:
-			label.configure(im = im_1)
-			label.image = im_1
-		elif bd_var_num == 2:
-			label.configure(im = im_2)
-			label.image = im_2
-					
-		elif bd_pt == 'w':
+		if bd_pt == 'w':
 			label.configure(im = im_wht)
 			label.image = im_wht
 		elif bd_pt == 'blnk':
@@ -197,8 +186,6 @@ class Game_Gui:
 
 	# test to see if board changed in a spot, to see if you need new label
 	def _board_changed(self, my_board, i, j):
-		
-		# various print statement diagnoses
 		try:
 			old_state_pt = self.my_game.board_hist[-2][i, j]
 			new_state_pt = my_board[i,j]
@@ -253,8 +240,6 @@ class Game_Gui:
 			if (my_state.is_variation() == False):
 				my_state.flip()
 
-
 my_game_gui = Game_Gui(9)
 my_game_gui.create_board()
 my_game_gui.root.mainloop()
-

@@ -125,7 +125,6 @@ class Game:
 			# check OPPOSITE COLOR liberties
 			self._flood_fill_liberties(elem, moves.flip(grid_pt.color))
 			if self.liberties == 0 and len(self.same_col_set) != 0:
-				#print("Something is captured")
 				captures_anything = True	
 
 			# reset flood_fill params
@@ -134,7 +133,6 @@ class Game:
 
 		# The move captures nothing - now we check if is also suicidal 
 		if captures_anything is False:
-			#print("Nothing is captured")
 			# check CURRENT color liberties
 			self._flood_fill_liberties((grid_pt.np_x, grid_pt.np_y), grid_pt.color)
 
@@ -292,8 +290,6 @@ class Game:
 		if game_state.variation == True:
 			clicked_sq = self.board[grid_pt.np_x, grid_pt.np_y]
 			if clicked_sq.is_blnk():
-				# print("variation set Before")
-				# print(self.board[grid_pt.np_x, grid_pt.np_y].variation_n
 				clicked_sq.variation_num = game_state.variation_num
 	
 				self.board_hist.append(copy.deepcopy(self.board))
@@ -351,6 +347,23 @@ def open_sgf(filename):
 			#board.play(row, col, colour)
 		except ValueError:
 			raise Exception("illegal move in sgf file")
+	
+	game_nodes = sgf_game.get_main_sequence()
+	
+	for node in game_nodes:
+		if node.has_property("LB"):
+			node_vals = node.get("LB")[0]
+			row = (new_game.board_sz - 1) - node_vals[0][0]
+			col = node_vals[0][1]
+			var = node_vals[1]
+			
+			my_array[row,col] = moves.GridPoint('blnk', row, col, var, sz - 1)
+			
+			print(row, col, var)
+	#if game_node.get_
+	#lb_node = sgf_game.get_last_node()
+	#print(lb_node.get_raw_list("LB"))
+	
 	return new_game
 
 def make_new_game(size):
