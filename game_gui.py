@@ -1,6 +1,6 @@
 import tkinter as tk
 import numpy as np
-import board as bd 
+import game as gm 
 import moves
 from sgfmill import sgf, sgf_moves, ascii_boards
 from tkinter import messagebox, simpledialog, filedialog
@@ -11,7 +11,7 @@ class Game_Gui:
 	def __init__(self, size):
 		# game logic elements	
 		self.size = size
-		self.my_game = bd.make_new_game(size) # Game type
+		self.my_game = gm.Game(size) # Game type
 		self.game_state = moves.GameState()
 	
 		# gui elements
@@ -74,7 +74,7 @@ class Game_Gui:
 			
 	# second callback to change text of button while running for new game
 	def _new_game_on_click(self):
-		self.my_game = bd.make_new_game(self.size)
+		self.my_game = gm.Game(self.size)
 
 		self.game_state.turn = 'b'
 		self.game_state.variation_num = 0
@@ -100,7 +100,7 @@ class Game_Gui:
 	def _open_on_click(self):
 		self._new_game_on_click()
 		filename = filedialog.askopenfilename()
-		self.my_game = bd.open_sgf(filename)
+		self.my_game = gm.open_sgf(filename)
 		
 		
 		# TODO needs to reflect actual new game state?
@@ -158,8 +158,6 @@ class Game_Gui:
 		im_blck = tk.PhotoImage(file='./img/black.gif')
 		im_wht = tk.PhotoImage(file='./img/white.gif')
 		im_blnk = tk.PhotoImage(file='./img/center.gif')
-		im_1 = tk.PhotoImage(file='./img/v1.gif')
-		im_2 = tk.PhotoImage(file='./img/v2.gif')
 
 		label = self.label_grid[i,j]
 		bd_pt = my_board[i,j].color

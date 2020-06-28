@@ -1,18 +1,20 @@
 import numpy as np
 import moves
-import board as bd
+import card
 from sgfmill import sgf, sgf_moves, ascii_boards
 from sgfmill import boards
 import copy
 
-class Board:
-	def __init__(self, board):
-		self.board = board # numpy array of GridPoints
-		self.board_sz = len(board)
-		self.sgf_game = sgf.Sgf_game(size=len(board))
+class Game:
+	def __init__(self, size):
+
+		# numpy array of GridPoints
+		self.board = self._init_board(size) 
+		self.board_sz = size
+		self.sgf_game = sgf.Sgf_game(size=size)
 
 		# keeps track of board history for 'ko' rule
-		self.board_hist = [copy.deepcopy(board)] 
+		self.board_hist = [copy.deepcopy(self.board)] 
 		#self.working_state = None # tracking for new obj
 	
 		self.liberties = 0
@@ -20,14 +22,19 @@ class Board:
 		
 		# keeps track for scoring (unusued now)
 		self.prisoners = {'b': 0, 'w': 0}
+
+	def _init_board(self, size):
+		my_array = np.ndarray(shape = (size, size), dtype=object)
+		for x in range(size):
+			for y in range(size):
+				my_array[x,y] = moves.GridPoint('blnk', x, y, 0, size)
+
+		return my_array
 		
 	# method to return game tree
 	def save_game(self, game_name):
-		with open("./sgf_files/" + game_name + ".sgf", "wb") as f:
-			f.write(self.sgf_game.serialise())  
-			
-	#def open_game():
-	#	with 
+		card.add_card(self.sgf_game)
+ 
 
 	'''
 	The main recursive algorithm for flood_fill.
@@ -361,14 +368,4 @@ def open_sgf(filename):
 			
 			print(row, col, var)
 	
-	return new_game
-
-def make_new_game(size):
-	my_array = np.ndarray(shape = (size, size), dtype=object)
-	
-	for x in range(size):
-		for y in range(size):
-			my_array[x,y] = moves.GridPoint('blnk', x, y, 0, size)
-	
-	new_game = bd.Board(my_array)
 	return new_game

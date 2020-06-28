@@ -1,5 +1,4 @@
 import numpy as np
-import board as bd
 from sgfmill import sgf
 
 # This type goes into the numpy grid and tracks

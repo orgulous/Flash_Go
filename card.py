@@ -1,20 +1,26 @@
 import json
 import datetime
 
-def add_card(filename, date_created, space_level, date_due, date_last_reviewed):
+def get_card():
+	return
+
+def edit_card():
+	return
+
+def add_card(sgf_game):
 
 	json_file = open("./json/card_data.json", "r+")
 	cards = json.load(json_file)
 	
 	time = datetime.datetime.now()
-	time = time.strftime("%c")	
+	time_str = time.strftime("%S-%M-%H_%d-%m-%Y")	
 	
 	new_card = {
-		"filename": filename,
-		"date_created": date_created,
+		"filename": "card_" + time_str + ".sgf",
+		"date_created": time_str,
 		"space_level" : 0,
-		"date_last_reviewed": time,
-		"date_due": time
+		"date_last_reviewed": time_str,
+		"date_due": time_str
 	}
 	
 	card_ls = cards["cards"]
@@ -27,7 +33,8 @@ def add_card(filename, date_created, space_level, date_due, date_last_reviewed):
 	json.dump(cards, json_file)
 	json_file.close()
 
-time = datetime.datetime.now()
-time = time.strftime("%c")	
-add_card("test.sgf", time, 0, time, time)
-	
+	new_card_filename = new_card["filename"]
+	# then write the actual file
+	with open("./sgf_files/" + new_card_filename
+		+ ".sgf", "wb") as f:
+		f.write(sgf_game.serialise()) 
