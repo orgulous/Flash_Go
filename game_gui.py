@@ -71,14 +71,20 @@ class Game_Gui:
 		# open SGF button
 		self.bt = tk.Button(self.top_frame, text = "Open",  command = self._open_on_click)
 		self.bt.pack(side = tk.RIGHT, fill = tk.X)
+
+		# open SGF button
+		self.bt = tk.Button(self.top_frame, text = "Problem",  command = self._problem_on_click)
+		self.bt.pack(side = tk.RIGHT, fill = tk.X)
 			
 	# second callback to change text of button while running for new game
 	def _new_game_on_click(self):
 		self.my_game = gm.Game(self.size)
 
-		self.game_state.turn = 'b'
-		self.game_state.variation_num = 0
-		self.game_state.variation = False
+		self.game_state = moves.GameState()
+		#self.game_state.turn = 'b'
+		#self.game_state.variation_num = 0
+		#self.game_state.variation = False
+		#self.game_state
 		self.the_turn.set("Turn: Black")
 		self.new_game_bt_txt.set("New Game")
 		self.turn = 'w'
@@ -90,11 +96,26 @@ class Game_Gui:
 				label.config(text=str(""), compound = 'center')
 		
 		self._gui_update()
+		
+		# stored action for moving to variations
+	def _problem_on_click(self):
+		self.game_state.variation = False
+		
+		self.game_state.make_problem()
+		
+		print("variation", self.game_state.variation)
+		print("problem", self.game_state.problem)
 	
 	# stored action for moving to variations
 	def _variation_on_click(self):
+	
+		self.game_state.problem = False
 		self.game_state.make_variation()
 		self.game_state.variation_num = 0
+		
+		print("variation", self.game_state.variation)
+		print("problem", self.game_state.problem)
+		
 	
 	# Open an SGF file
 	def _open_on_click(self):
@@ -109,8 +130,8 @@ class Game_Gui:
 		
 	# stored action for new game on click
 	def _save_on_click(self):
-		game_name = simpledialog.askstring("Save as", "What do you want to name your sgf?", parent=self.root)
-		self.my_game.save_game(game_name)
+		#game_name = simpledialog.askstring("Save as", "What do you want to name your sgf?", parent=self.root)
+		self.my_game.save_game()
 		
 	# All of these get new text values of the status bar
 	def _update_status(self):
@@ -164,12 +185,17 @@ class Game_Gui:
 		
 
 		bd_var_num = my_board[i,j].variation_num	
+		bd_pt_prob = my_board[i,j].problem
+		#print("bd_var_num", bd_var_num)
+		#print("bd_pt_prob", bd_pt_prob)
 
 		if bd_var_num != 0:
 			label.config(text=str(bd_var_num), compound = 'center', font =('Helvetica', 18, 'bold'))
 		#print("bd_var_num ", bd_var_num)
-		
-		if bd_pt == 'w':
+		elif bd_pt_prob:
+			label.config(text="‎✔", fg = "green", 
+				compound = 'center', font =('Helvetica', 20, 'bold'))	
+		elif bd_pt == 'w':
 			label.configure(im = im_wht)
 			label.image = im_wht
 		elif bd_pt == 'blnk':
@@ -199,11 +225,13 @@ class Game_Gui:
 	def _update_board(self):
 		# get current status of board from my_game instance
 		my_board = self.my_game.board
+		print("_update_board called")
 
 		for i in range(self.size):
 			for j in range(self.size):
 				# only updates cell if changed. Otherwise takes too long
 				if self._board_changed(my_board, i, j) or len(self.my_game.board_hist) < 2:
+				
 					self._alter_board_cell(my_board,i, j)
 	
 
@@ -221,15 +249,15 @@ class Game_Gui:
 		if my_state.variation == True:
 			my_state.variation_num = my_state.variation_num + 1
 	
-		# TODO variation number
-		grid_pt = moves.GridPoint(my_state.turn, i, j, my_state.variation_num, self.size)
+		grid_pt = moves.GridPoint(my_state.turn, i, j, my_state.variation_num, self.size, my_state.problem)
 		
 		# all logic on board updating is contained here
 		# takes the game board and then updates it.
+		print("grid_pt.my_state.problem", grid_pt.problem)
 		successful_move = self.my_game.update(grid_pt, my_state) 
 		
+		
 		if successful_move:
-
 			print("successful move at, ", grid_pt.np_x, grid_pt.np_y)
 			
 			self._gui_update()

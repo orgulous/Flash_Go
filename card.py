@@ -27,14 +27,16 @@ def add_card(sgf_game):
 	card_ls.append(new_card)
 	cards["cards"] = card_ls
 	
-	print (cards)
+	#print (cards)
 	
 	json_file.seek(0) # go to beginning
 	json.dump(cards, json_file)
 	json_file.close()
 
+	print("#### Saving this ####")
+	print(sgf_game.serialise())
+
 	new_card_filename = new_card["filename"]
 	# then write the actual file
-	with open("./sgf_files/" + new_card_filename
-		+ ".sgf", "wb") as f:
+	with open("./sgf_files/" + new_card_filename, "wb") as f:
 		f.write(sgf_game.serialise()) 

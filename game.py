@@ -32,7 +32,7 @@ class Game:
 		return my_array
 		
 	# method to return game tree
-	def save_game(self, game_name):
+	def save_game(self):
 		card.add_card(self.sgf_game)
  
 
@@ -280,8 +280,10 @@ class Game:
 	def _update_sgf_tree(self, grid_pt, game_state):
 	
 		node = self.sgf_game.extend_main_sequence()
-		
-		if game_state.variation == False:
+		if game_state.problem == True:
+			print("setting a problem node")
+			node.set('LB', [((grid_pt.sgf_x, grid_pt.sgf_y), "V" )])
+		elif game_state.variation == False:
 			node.set_move(grid_pt.color, (grid_pt.sgf_x, grid_pt.sgf_y))
 		elif game_state.variation == True:
 			var_str = str(game_state.variation_num)
@@ -292,16 +294,26 @@ class Game:
 	# the main entry point into board logic and board updating
 	def update(self, grid_pt, game_state):
 	
-		#self.working_state = copy
+		if game_state.problem == True:
+			clicked_sq = self.board[grid_pt.np_x, grid_pt.np_y]
+			if clicked_sq.is_blnk():
+				clicked_sq.problem = True
+				self.board_hist.append(copy.deepcopy(self.board))
+				self._update_sgf_tree(grid_pt, game_state) 
+				return True
+			else:
+				return False
 		
-		if game_state.variation == True:
+		elif game_state.variation == True:
 			clicked_sq = self.board[grid_pt.np_x, grid_pt.np_y]
 			if clicked_sq.is_blnk():
 				clicked_sq.variation_num = game_state.variation_num
 	
 				self.board_hist.append(copy.deepcopy(self.board))
 				self._update_sgf_tree(grid_pt, game_state) 
-			return True
+				return True
+			else:
+				return False
 		
 		# make sure move is valid before placing
 		elif (grid_pt.color == 'w' or grid_pt.color == 'b'):
@@ -341,7 +353,7 @@ def open_sgf(filename):
 	sz = sgf_game.get_size() 
 	
 	# makes new game
-	new_game = make_new_game(sz)
+	new_game = Game(sz)
 	my_array = new_game.board
 	
 	for color, move in plays:
