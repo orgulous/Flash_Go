@@ -22,7 +22,7 @@ class Game_Gui:
 		self.bottom_frame = tk.Frame(self.root)
 
 		# text variables for the labels
-		self.the_turn = tk.StringVar(value="Turn: Black")
+		self.brush_mode_txt = tk.StringVar()
 
 		self.new_game_bt_txt = tk.StringVar()
 		self.save_bt_txt = tk.StringVar()
@@ -50,7 +50,7 @@ class Game_Gui:
 		self.new_game_bt_txt.set("New Game")
 		self.save_bt_txt.set("Save")
 
-		self.turn_lab = tk.Label(self.top_frame, textvariable = self.the_turn, height = 3)
+		self.turn_lab = tk.Label(self.top_frame, textvariable = self.brush_mode_txt, height = 3)
 		self.turn_lab.pack(side = tk.LEFT, padx = 30)
 		self.pris_lab = tk.Label(self.bottom_frame, textvariable = " ", height = 3)
 		self.pris_lab.pack(side = tk.LEFT, padx = 20)
@@ -72,8 +72,12 @@ class Game_Gui:
 		self.bt = tk.Button(self.top_frame, text = "Open",  command = self._open_on_click)
 		self.bt.pack(side = tk.RIGHT, fill = tk.X)
 
+		# Problem button
+		self.bt = tk.Button(self.top_frame, text = "Problem",  command = self._answers_on_click)
+		self.bt.pack(side = tk.RIGHT, fill = tk.X)
+		
 		# open SGF button
-		self.bt = tk.Button(self.top_frame, text = "Problem",  command = self._problem_on_click)
+		self.bt = tk.Button(self.top_frame, text = "B/W",  command = self._turns_on_click)
 		self.bt.pack(side = tk.RIGHT, fill = tk.X)
 			
 	# second callback to change text of button while running for new game
@@ -81,11 +85,7 @@ class Game_Gui:
 		self.my_game = gm.Game(self.size)
 
 		self.game_state = moves.GameState()
-		#self.game_state.turn = 'b'
-		#self.game_state.variation_num = 0
-		#self.game_state.variation = False
-		#self.game_state
-		self.the_turn.set("Turn: Black")
+
 		self.new_game_bt_txt.set("New Game")
 		self.turn = 'w'
 		
@@ -96,65 +96,47 @@ class Game_Gui:
 				label.config(text=str(""), compound = 'center')
 		
 		self._gui_update()
+
+	# stored action for moving to problems
+	def _turns_on_click(self):
+		self.game_state.make_turns()
 		
-		# stored action for moving to variations
-	def _problem_on_click(self):
-		self.game_state.variation = False
+	# stored action for moving to problems
+	def _answers_on_click(self):
+		self.game_state.make_answers()
 		
-		self.game_state.make_problem()
-		
-		print("variation", self.game_state.variation)
-		print("problem", self.game_state.problem)
-	
 	# stored action for moving to variations
 	def _variation_on_click(self):
-	
-		self.game_state.problem = False
-		self.game_state.make_variation()
+		self.game_state.make_numbers()
 		self.game_state.variation_num = 0
-		
-		print("variation", self.game_state.variation)
-		print("problem", self.game_state.problem)
-		
 	
 	# Open an SGF file
 	def _open_on_click(self):
 		self._new_game_on_click()
+		self.game_state = moves.GameState()
+		
 		filename = filedialog.askopenfilename()
 		self.my_game = gm.open_sgf(filename)
-		
-		
-		# TODO needs to reflect actual new game state?
-		self.game_state = moves.GameState()
 		self._gui_update()
 		
 	# stored action for new game on click
 	def _save_on_click(self):
-		#game_name = simpledialog.askstring("Save as", "What do you want to name your sgf?", parent=self.root)
 		self.my_game.save_game()
-		
-	# All of these get new text values of the status bar
-	def _update_status(self):
-
-		# 1 - update turn (oppsite turn now). Or update to variations
-		
-		if not self.game_state.is_variation():	
-			turn_txt = "White" if self.game_state.turn == 'b' else "Black"
-			turn_sts = "Turn: " + turn_txt 
-		else:
-			turn_sts = "Variations"
-		self.the_turn.set(turn_sts)
-		
+	
 	# initially creates all the labels for the board
 	def create_board(self):
 		my_board = self.my_game.board
-		im_blck = tk.PhotoImage(file='./img/black.gif')
-		im_wht = tk.PhotoImage(file='./img/white.gif')
+		# im_blck = tk.PhotoImage(file='./img/black.gif')
+		# im_wht = tk.PhotoImage(file='./img/white.gif')
 		im_blnk = tk.PhotoImage(file='./img/center.gif')
+		
+		
 		for i in range(self.size):
 			for j in range(self.size):
 				# try only updating when board changes
-				bd_pt = my_board[i,j].color
+				lab = tk.Label(self.game_frame, image = im_blnk, padx=0, pady=0, bd=0)
+				lab.image = im_blnk
+				''' bd_pt = my_board[i,j].color
 				
 				if bd_pt == 'blnk':
 					lab = tk.Label(self.game_frame, image = im_blnk, padx=0, pady=0, bd=0)
@@ -167,12 +149,25 @@ class Game_Gui:
 					lab.image = im_blck
 				else:
 					raise ValueError
+				'''
 
 				# store the reference to label into here for future use
 				self.label_grid[i,j] = lab
 				lab.grid(row=i,column=j, padx = (0, 0), pady = (0,0))
 				lab.bind('<Button-1>',lambda e,i=i,j=j: self._on_click(i,j,e))
 			
+	
+	# All of these get new text values of the status bar
+	def _update_status(self):
+		self.brush_mode_txt = self.game_state.brush
+
+	def _is_int(self, s):
+		try: 
+			int(s)
+			return True
+		except ValueError:
+			return False
+
 	# updates the images in the cell
 	def _alter_board_cell(self, my_board, i, j):
 		
@@ -181,35 +176,32 @@ class Game_Gui:
 		im_blnk = tk.PhotoImage(file='./img/center.gif')
 
 		label = self.label_grid[i,j]
-		bd_pt = my_board[i,j].color
 		
-
-		bd_var_num = my_board[i,j].variation_num	
-		bd_pt_prob = my_board[i,j].problem
-		#print("bd_var_num", bd_var_num)
-		#print("bd_pt_prob", bd_pt_prob)
-
-		if bd_var_num != 0:
-			label.config(text=str(bd_var_num), compound = 'center', font =('Helvetica', 18, 'bold'))
+		my_grid_sq = my_board[i,j]
+		symbol = my_grid_sq.symbol
+		
+		if self._is_int(symbol):
+			label.config(text=symbol, compound = 'center', font =('Helvetica', 18, 'bold'))
 		#print("bd_var_num ", bd_var_num)
-		elif bd_pt_prob:
+		elif symbol == 'check':
 			label.config(text="‎✔", fg = "green", 
 				compound = 'center', font =('Helvetica', 20, 'bold'))	
-		elif bd_pt == 'w':
-			label.configure(im = im_wht)
-			label.image = im_wht
-		elif bd_pt == 'blnk':
-			label.configure(im = im_blnk)
-			label.image = im_blnk
-		elif bd_pt == 'b':
+		elif symbol == 'black':
 			label.configure(im = im_blck)
 			label.image = im_blck
+		elif symbol == 'white':
+			label.configure(im = im_wht)
+			label.image = im_wht
+		elif symbol == 'blank':
+			label.configure(im = im_blnk)
+			label.image = im_blnk
 		else:
 			print("haven't gotten to more vairations")
 			# raise ValueError
 
 	# test to see if board changed in a spot, to see if you need new label
 	def _board_changed(self, my_board, i, j):
+		
 		try:
 			old_state_pt = self.my_game.board_hist[-2][i, j]
 			new_state_pt = my_board[i,j]
@@ -225,13 +217,13 @@ class Game_Gui:
 	def _update_board(self):
 		# get current status of board from my_game instance
 		my_board = self.my_game.board
-		print("_update_board called")
 
 		for i in range(self.size):
 			for j in range(self.size):
 				# only updates cell if changed. Otherwise takes too long
 				if self._board_changed(my_board, i, j) or len(self.my_game.board_hist) < 2:
 				
+					print("Board changed at ", i , j)
 					self._alter_board_cell(my_board,i, j)
 	
 
@@ -244,27 +236,30 @@ class Game_Gui:
 	def _on_click(self, i, j, event):
 		print("~~~~~~~~~~~~~~~~~~~~~~")
 		print("~~~~~~~~~~~~~~~~~~~~~~")
-		my_state = self.game_state
-	
-		if my_state.variation == True:
-			my_state.variation_num = my_state.variation_num + 1
-	
-		grid_pt = moves.GridPoint(my_state.turn, i, j, my_state.variation_num, self.size, my_state.problem)
+		
+		my_brush = self.game_state.brush
+
+		# calculated what symbol to used based on the state
+		symbol = moves.calc_symbol(self.game_state)
+		print("symbol just calculated:", symbol)
+			
+		grid_sq = moves.GridSquare(i, j, symbol, self.size)
 		
 		# all logic on board updating is contained here
 		# takes the game board and then updates it.
-		print("grid_pt.my_state.problem", grid_pt.problem)
-		successful_move = self.my_game.update(grid_pt, my_state) 
+		
+		#print("grid_sq.my_state.problem", grid_sq.problem)
+		successful_move = self.my_game.update(grid_sq, self.game_state) 
 		
 		
 		if successful_move:
-			print("successful move at, ", grid_pt.np_x, grid_pt.np_y)
+			print("successful move at, ", grid_sq.np_x, grid_sq.np_y)
 			
 			self._gui_update()
 			
 			# Flip if not a pass
-			if (my_state.is_variation() == False):
-				my_state.flip()
+			if (my_brush == moves.Brush('turns')):
+				self.game_state.flip_turns()
 
 my_game_gui = Game_Gui(9)
 my_game_gui.create_board()
