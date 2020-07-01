@@ -20,15 +20,13 @@ class Game_Gui:
 		self.top_frame = tk.Frame(self.root)
 		self.game_frame = tk.Frame(self.root)
 		self.bottom_frame = tk.Frame(self.root)
+		self.right_frame = tk.Frame(self.root)
 
 		# text variables for the labels
 		self.brush_mode_txt = tk.StringVar()
-
-		self.new_game_bt_txt = tk.StringVar()
-		self.save_bt_txt = tk.StringVar()
 		
 		# actual labels for storing info
-		self.turn_lab = None
+		self.brush_mode_lab = None
 
 		# stores references to each label for new update
 		self.label_grid = np.ndarray(shape=(size,size), dtype=object)
@@ -42,43 +40,42 @@ class Game_Gui:
 		self.root.resizable(width = 0, height = 0)
 
 		# tells how to pack the elements inside of the frame 
-		self.top_frame.pack(side = tk.TOP, fill = tk.X)
-		self.game_frame.pack(fill = "none", expand = True)
-		self.bottom_frame.pack(side = tk.TOP, fill = tk.X)
+		self.top_frame.pack(side = tk.TOP, fill = tk.X, padx = 20, pady = 10)
+		self.right_frame.pack(side = tk.RIGHT)
+		self.game_frame.pack(fill = "none", expand = True, padx = 20)
+		self.bottom_frame.pack(side = tk.BOTTOM, fill = tk.X)
+		
+		
+		self.brush_mode_txt.set("B/W")
+		self.brush_mode_lab = tk.Label(self.bottom_frame, textvariable = self.brush_mode_txt, height = 3)
+		self.brush_mode_lab.pack(side = tk.LEFT, padx = 20)
+		
 
-		# set default text values for status var
-		self.new_game_bt_txt.set("New Game")
-		self.save_bt_txt.set("Save")
-
-		self.turn_lab = tk.Label(self.top_frame, textvariable = self.brush_mode_txt, height = 3)
-		self.turn_lab.pack(side = tk.LEFT, padx = 30)
-		self.pris_lab = tk.Label(self.bottom_frame, textvariable = " ", height = 3)
-		self.pris_lab.pack(side = tk.LEFT, padx = 20)
-
+		###############
+		
 		# Add the new game button
-		self.bt = tk.Button(self.top_frame, textvariable = self.new_game_bt_txt, 
-			command = self._new_game_on_click)
-		self.bt.pack(side = tk.RIGHT, fill = tk.X)
-
-		# Add the variations button
-		self.bt = tk.Button(self.top_frame, text = "Variation", command = self._variation_on_click)
-		self.bt.pack(side = tk.RIGHT, fill = tk.X)
+		self.bt = tk.Button(self.top_frame, text = "New Game", command = self._new_game_on_click)
+		self.bt.pack(side = tk.LEFT, fill = tk.X)
 		
 		# save SGF button
-		self.bt = tk.Button(self.top_frame, text = "Save", textvariable = self.save_bt_txt, command = self._save_on_click)
-		self.bt.pack(side = tk.RIGHT, fill = tk.X)
-	
+		self.bt = tk.Button(self.top_frame, text = "Save", command = self._save_on_click)
+		self.bt.pack(side = tk.LEFT, fill = tk.X)
+
 		# open SGF button
 		self.bt = tk.Button(self.top_frame, text = "Open",  command = self._open_on_click)
-		self.bt.pack(side = tk.RIGHT, fill = tk.X)
+		self.bt.pack(side = tk.LEFT, fill = tk.X)
+
+		# Add the variations button
+		self.bt = tk.Button(self.right_frame, text = "Numbers", command = self._variation_on_click)
+		self.bt.pack(side = tk.TOP, fill = tk.X)
 
 		# Problem button
-		self.bt = tk.Button(self.top_frame, text = "Problem",  command = self._answers_on_click)
-		self.bt.pack(side = tk.RIGHT, fill = tk.X)
+		self.bt = tk.Button(self.right_frame, text = "Answers",  command = self._answers_on_click)
+		self.bt.pack(side = tk.BOTTOM, fill = tk.X)
 		
-		# open SGF button
-		self.bt = tk.Button(self.top_frame, text = "B/W",  command = self._turns_on_click)
-		self.bt.pack(side = tk.RIGHT, fill = tk.X)
+		# B/W button
+		self.bt = tk.Button(self.right_frame, text = "B/W",  command = self._turns_on_click)
+		self.bt.pack(side = tk.BOTTOM, fill = tk.X)
 			
 	# second callback to change text of button while running for new game
 	def _new_game_on_click(self):
@@ -86,7 +83,7 @@ class Game_Gui:
 
 		self.game_state = moves.GameState()
 
-		self.new_game_bt_txt.set("New Game")
+		#self.new_game_bt_txt.set("New Game")
 		self.turn = 'w'
 		
 		# store the reference to label into here for future use
@@ -126,8 +123,6 @@ class Game_Gui:
 	# initially creates all the labels for the board
 	def create_board(self):
 		my_board = self.my_game.board
-		# im_blck = tk.PhotoImage(file='./img/black.gif')
-		# im_wht = tk.PhotoImage(file='./img/white.gif')
 		im_blnk = tk.PhotoImage(file='./img/center.gif')
 		
 		
@@ -136,20 +131,6 @@ class Game_Gui:
 				# try only updating when board changes
 				lab = tk.Label(self.game_frame, image = im_blnk, padx=0, pady=0, bd=0)
 				lab.image = im_blnk
-				''' bd_pt = my_board[i,j].color
-				
-				if bd_pt == 'blnk':
-					lab = tk.Label(self.game_frame, image = im_blnk, padx=0, pady=0, bd=0)
-					lab.image = im_blnk
-				elif bd_pt == 'w':
-					lab = tk.Label(self.game_frame, image = im_wht, bd=0)
-					lab.image = im_wht
-				elif bd_pt == 'b':
-					lab = tk.Label(self.game_frame, image = im_blck, bd=0) 
-					lab.image = im_blck
-				else:
-					raise ValueError
-				'''
 
 				# store the reference to label into here for future use
 				self.label_grid[i,j] = lab
@@ -159,7 +140,13 @@ class Game_Gui:
 	
 	# All of these get new text values of the status bar
 	def _update_status(self):
-		self.brush_mode_txt = self.game_state.brush
+		new_text = self.game_state.brush.value
+		print("updating status", new_text)
+		
+		self.brush_mode_txt.set(new_text)
+		#self.brush_mode_lab = tk.Label(self.bottom_frame, textvariable = self.brush_mode_txt, height = 3)
+		self.brush_mode_lab.config(textvariable = self.brush_mode_txt)
+		#self.brush_mode_txt.set()
 
 	def _is_int(self, s):
 		try: 
@@ -250,7 +237,6 @@ class Game_Gui:
 		
 		#print("grid_sq.my_state.problem", grid_sq.problem)
 		successful_move = self.my_game.update(grid_sq, self.game_state) 
-		
 		
 		if successful_move:
 			print("successful move at, ", grid_sq.np_x, grid_sq.np_y)
