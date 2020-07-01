@@ -14,7 +14,7 @@ def calc_symbol(game_state):
 		game_state.variation_num += 1
 		symbol = str(var_num)
 	elif brush == Brush('answers'):
-		symbol = 'check'
+		symbol = 'answers'
 	elif brush == Brush('turns'):
 		if turn == Turn('black'):
 			symbol = 'black'

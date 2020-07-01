@@ -116,7 +116,7 @@ class Game_Gui:
 		self.game_state = moves.GameState()
 		
 		filename = filedialog.askopenfilename()
-		self.my_game = gm.open_sgf(filename)
+		self.my_game = self.my_game._open_sgf(filename)
 		self._gui_update()
 		
 	# stored action for new game on click
@@ -183,7 +183,7 @@ class Game_Gui:
 		if self._is_int(symbol):
 			label.config(text=symbol, compound = 'center', font =('Helvetica', 18, 'bold'))
 		#print("bd_var_num ", bd_var_num)
-		elif symbol == 'check':
+		elif symbol == 'answers':
 			label.config(text="‎✔", fg = "green", 
 				compound = 'center', font =('Helvetica', 20, 'bold'))	
 		elif symbol == 'black':
@@ -196,8 +196,8 @@ class Game_Gui:
 			label.configure(im = im_blnk)
 			label.image = im_blnk
 		else:
-			print("haven't gotten to more vairations")
-			# raise ValueError
+			print("no value for symbol in this grid square", symbol)
+			raise ValueError
 
 	# test to see if board changed in a spot, to see if you need new label
 	def _board_changed(self, my_board, i, j):
@@ -223,7 +223,7 @@ class Game_Gui:
 				# only updates cell if changed. Otherwise takes too long
 				if self._board_changed(my_board, i, j) or len(self.my_game.board_hist) < 2:
 				
-					print("Board changed at ", i , j)
+					#print("Board changed at ", i , j)
 					self._alter_board_cell(my_board,i, j)
 	
 
