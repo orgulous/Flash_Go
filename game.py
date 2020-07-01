@@ -15,7 +15,6 @@ class Game:
 
 		# keeps track of board history for 'ko' rule
 		self.board_hist = [copy.deepcopy(self.board)] 
-	
 		self.liberties = 0
 		self.same_col_set = set([])
 		
@@ -310,7 +309,6 @@ class Game:
 		elif game_state.brush == moves.Brush('numbers'):
 			clicked_sq = self.board[grid_sq.np_x, grid_sq.np_y]
 			if clicked_sq.is_blnk():
-				# set clicked square to proper symbol
 				clicked_sq.symbol = grid_sq.symbol
 				self.board_hist.append(copy.deepcopy(self.board))
 				self._update_sgf_tree(grid_sq, game_state) 
