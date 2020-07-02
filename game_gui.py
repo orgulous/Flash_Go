@@ -46,7 +46,7 @@ class Game_Gui:
 		self.bottom_frame.pack(side = tk.BOTTOM, fill = tk.X)
 		
 		
-		self.brush_mode_txt.set("B/W")
+		self.brush_mode_txt.set("")
 		self.brush_mode_lab = tk.Label(self.bottom_frame, textvariable = self.brush_mode_txt, height = 3)
 		self.brush_mode_lab.pack(side = tk.LEFT, padx = 20)
 		
@@ -66,16 +66,17 @@ class Game_Gui:
 		self.bt.pack(side = tk.LEFT, fill = tk.X)
 
 		# Add the variations button
-		self.bt = tk.Button(self.right_frame, text = "Numbers", command = self._variation_on_click)
-		self.bt.pack(side = tk.TOP, fill = tk.X)
+		self.bt_numbers = tk.Button(self.right_frame, text = "Numbers", command = self._variation_on_click)
+		self.bt_numbers.pack(side = tk.TOP, fill = tk.X)
 
 		# Problem button
-		self.bt = tk.Button(self.right_frame, text = "Answers",  command = self._answers_on_click)
-		self.bt.pack(side = tk.BOTTOM, fill = tk.X)
+		self.bt_answers = tk.Button(self.right_frame, text = "Answers",  command = self._answers_on_click)
+		self.bt_answers.pack(side = tk.BOTTOM, fill = tk.X)
 		
 		# B/W button
-		self.bt = tk.Button(self.right_frame, text = "B/W",  command = self._turns_on_click)
-		self.bt.pack(side = tk.BOTTOM, fill = tk.X)
+		self.bt_turns = tk.Button(self.right_frame, text = "B/W",  command = self._turns_on_click)
+		self.bt_turns.pack(side = tk.BOTTOM, fill = tk.X)
+		self.bt_turns.config(relief = tk.SUNKEN)
 			
 	# second callback to change text of button while running for new game
 	def _new_game_on_click(self):
@@ -97,15 +98,25 @@ class Game_Gui:
 	# stored action for moving to problems
 	def _turns_on_click(self):
 		self.game_state.make_turns()
+		self.bt_turns.config(relief = tk.SUNKEN)
+		self.bt_answers.config(relief = tk.RAISED)
+		self.bt_numbers.config(relief = tk.RAISED)
 		
 	# stored action for moving to problems
 	def _answers_on_click(self):
 		self.game_state.make_answers()
+		self.bt_numbers.config(relief = tk.RAISED)
+		self.bt_answers.config(relief = tk.SUNKEN)
+		self.bt_turns.config(relief = tk.RAISED)
 		
 	# stored action for moving to variations
 	def _variation_on_click(self):
 		self.game_state.make_numbers()
 		self.game_state.variation_num = 0
+		self.bt_numbers.config(relief = tk.SUNKEN)
+		self.bt_turns.config(relief = tk.RAISED)
+		self.bt_answers.config(relief = tk.RAISED)
+		
 	
 	# Open an SGF file
 	def _open_on_click(self):
@@ -125,7 +136,6 @@ class Game_Gui:
 		my_board = self.my_game.board
 		im_blnk = tk.PhotoImage(file='./img/center.gif')
 		
-		
 		for i in range(self.size):
 			for j in range(self.size):
 				# try only updating when board changes
@@ -141,12 +151,10 @@ class Game_Gui:
 	# All of these get new text values of the status bar
 	def _update_status(self):
 		new_text = self.game_state.brush.value
-		print("updating status", new_text)
-		
+		'''
 		self.brush_mode_txt.set(new_text)
-		#self.brush_mode_lab = tk.Label(self.bottom_frame, textvariable = self.brush_mode_txt, height = 3)
 		self.brush_mode_lab.config(textvariable = self.brush_mode_txt)
-		#self.brush_mode_txt.set()
+		'''
 
 	def _is_int(self, s):
 		try: 
