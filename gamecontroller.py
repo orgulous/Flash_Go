@@ -13,7 +13,7 @@ class FlashGo(tk.Tk):
 	def __init__(self, *args, **kwargs):
 		
 		tk.Tk.__init__(self, *args, **kwargs)
-		container = tk.Frame(self)
+		container = tk.Frame(self, bg = 'red')
 		
 		container.pack(side="top", fill="both", expand = False)
 		container.grid_rowconfigure(0, weight=1)

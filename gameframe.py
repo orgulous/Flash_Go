@@ -13,7 +13,7 @@ class EditFrame(tk.Frame):
 	def __init__(self, parent, controller):
 		tk.Frame.__init__(self, parent)
 		
-		
+		self.config(bg='purple')
 		
 		# game logic elements	
 		size = 9
@@ -31,9 +31,9 @@ class EditFrame(tk.Frame):
 		
 		
 		# place these frames into the root
-		self.menu_frame = tk.Frame(self)
+		self.menu_frame = tk.Frame(self, bg = 'green')
 		self.top_frame = tk.Frame(self)
-		self.game_frame = tk.Frame(self, width = 200)
+		self.game_frame = tk.Frame(self, width = 200, bg = 'blue')
 		self.bottom_frame = tk.Frame(self)
 		self.right_frame = tk.Frame(self)
 
@@ -63,9 +63,9 @@ class EditFrame(tk.Frame):
 		#self.game_frame.pack()
 
 	def _add_nav_buttons(self, controller):
-		self.menu_frame.pack()
+		self.menu_frame.pack(expand = True, fill = tk.X, padx = 20)
 		label = tk.Label(self.menu_frame, text="Mode: Editing Cards")
-		label.pack(pady=10, side = tk.TOP)
+		label.pack(pady=10, side = tk.TOP, expand = True, fill = 'both')
 		label.config(font=("Calibri", 30))
 
 		button1 = tk.Button(self.menu_frame, text="Back to Home",
@@ -86,7 +86,7 @@ class EditFrame(tk.Frame):
 		# tells how to pack the elements inside of the frame 
 		self.top_frame.pack(side = tk.TOP, fill = tk.X, padx = 20, pady = 10)
 		self.right_frame.pack(side = tk.RIGHT, padx = 8)
-		self.game_frame.pack()
+		self.game_frame.pack(padx = 20)
 		self.bottom_frame.pack(side = tk.BOTTOM, fill = tk.X)
 		
 		
