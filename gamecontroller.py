@@ -16,16 +16,17 @@ class FlashGo(tk.Tk):
 		container = tk.Frame(self)
 		
 		container.pack(side="top", fill="both", expand = False)
-
+		container.grid_rowconfigure(0, weight=1)
+		container.grid_columnconfigure(0, weight=1)
+		
 		self.frames = {}
 
 		for F in (StartPage, gf.EditFrame, FlashCards):
 			page_name = F.__name__
-			print(page_name)
 			frame = F(container, self)
 			self.frames[page_name] = frame
-			frame.grid(row=0, column=0, sticky="nsew")
-			#frame.grid()
+			frame.grid(row=0, column=0, sticky="n")
+			#frame.grid_columnconfigure()
 
 		self.show_frame("StartPage") #self.destroy()
 
@@ -33,7 +34,9 @@ class FlashGo(tk.Tk):
 		for fme in self.frames:     # Remove all frames
 			self.frames[fme].grid_remove()
 		frame = self.frames[page_name]
+		#frame.tkraise()
 		frame.grid() 
+	
 
 class StartPage(tk.Frame):
 
@@ -41,7 +44,7 @@ class StartPage(tk.Frame):
 		tk.Frame.__init__(self,parent)
 		
 		label = tk.Label(self, text="Start Page", font=LARGE_FONT)
-		label.pack(pady=10,padx=10)
+		label.pack(pady=10,padx=10, side = "top")
 
 		button = tk.Button(self, text="Test Flashcards", command=lambda: controller.show_frame("FlashCards"))
 		button.pack()
@@ -66,5 +69,5 @@ class FlashCards(tk.Frame):
 
 
 app = FlashGo()
-app.minsize(500, 100) 
+app.minsize(500, 100) #fix this somehow later 
 app.mainloop()

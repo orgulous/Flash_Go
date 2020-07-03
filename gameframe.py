@@ -6,11 +6,14 @@ import moves
 from sgfmill import sgf, sgf_moves, ascii_boards
 from tkinter import messagebox, simpledialog, filedialog
 from PIL import Image, ImageTk
+from tkinter import ttk
 
 class EditFrame(tk.Frame):
 
 	def __init__(self, parent, controller):
 		tk.Frame.__init__(self, parent)
+		
+		
 		
 		# game logic elements	
 		size = 9
@@ -24,50 +27,56 @@ class EditFrame(tk.Frame):
 		
 		#self.game_root = tk.Frame(self.root)
 		
-		# place these frames into the root
-		#self.top_frame = tk.Frame(self)
+		separator = ttk.Separator(self, orient='horizontal')
 		
-		#self.bottom_frame = tk.Frame(self)
-		#self.right_frame = tk.Frame(self)
+		
+		# place these frames into the root
+		self.menu_frame = tk.Frame(self)
+		self.top_frame = tk.Frame(self)
+		self.game_frame = tk.Frame(self, width = 200)
+		self.bottom_frame = tk.Frame(self)
+		self.right_frame = tk.Frame(self)
 
 		# text variables for the labels
-		#self.brush_mode_txt = tk.StringVar()
+		self.brush_mode_txt = tk.StringVar()
 		
 		# actual labels for storing info
-		#self.brush_mode_lab = None
+		self.brush_mode_lab = None
 
 		# stores references to each label for new update
-
-
-		 
-		label = tk.Label(self, text="Edit Cards")
-		label.pack(pady=10,padx=10)
-
-		button1 = tk.Button(self, text="Back to Home",
-			command=lambda: controller.show_frame("StartPage"))
-		button1.pack()
-
-		button2 = tk.Button(self, text="Test Flashcards",
-							command=lambda: controller.show_frame("FlashCards"))
-		button2.pack()
-			
-		self.game_frame = tk.Frame(self, bg = "red", width = 200)
+	
+		
 		
 		self.label_grid = np.ndarray(shape=(size,size), dtype=object)
 		
+		self._add_nav_buttons(controller)
+		
+		separator.pack(side='top', fill='x', pady=5)
+		
 		self.create_board()
 		
-		self.game_frame.pack()
-
-
-
-
+		self._set_gui_values()
 		
-		#self._set_gui_values()
+
+
 		
 		#self.game_frame.pack()
 
+	def _add_nav_buttons(self, controller):
+		self.menu_frame.pack()
+		label = tk.Label(self.menu_frame, text="Mode: Editing Cards")
+		label.pack(pady=10, side = tk.TOP)
+		label.config(font=("Calibri", 30))
 
+		button1 = tk.Button(self.menu_frame, text="Back to Home",
+			command=lambda: controller.show_frame("StartPage"))
+		button1.pack(fill = tk.X, side = tk.LEFT)
+
+		button2 = tk.Button(self.menu_frame, text="Test Flashcards", command=lambda: controller.show_frame("FlashCards"))
+		button2.pack(side = tk.LEFT, fill = tk.X)
+		
+
+	# PACKS and sets values
 	def _set_gui_values(self):
 
 		# create root values
@@ -75,17 +84,16 @@ class EditFrame(tk.Frame):
 		# self.root.resizable(width = 0, height = 0)
 
 		# tells how to pack the elements inside of the frame 
-		#self.top_frame.pack(side = tk.TOP, fill = tk.X, padx = 20, pady = 10)
-		#self.right_frame.pack(side = tk.RIGHT)
+		self.top_frame.pack(side = tk.TOP, fill = tk.X, padx = 20, pady = 10)
+		self.right_frame.pack(side = tk.RIGHT, padx = 8)
+		self.game_frame.pack()
+		self.bottom_frame.pack(side = tk.BOTTOM, fill = tk.X)
 		
-		#self.bottom_frame.pack(side = tk.BOTTOM, fill = tk.X)
 		
-		'''
 		self.brush_mode_txt.set("")
 		self.brush_mode_lab = tk.Label(self.bottom_frame, textvariable = self.brush_mode_txt, height = 3)
 		self.brush_mode_lab.pack(side = tk.LEFT, padx = 20)
 		
-
 		###############
 		
 		# Add the new game button
@@ -104,6 +112,7 @@ class EditFrame(tk.Frame):
 		self.bt_numbers = tk.Button(self.right_frame, text = "Numbers", command = self._variation_on_click)
 		self.bt_numbers.pack(side = tk.TOP, fill = tk.X)
 
+		
 		# Problem button
 		self.bt_answers = tk.Button(self.right_frame, text = "Answers",  command = self._answers_on_click)
 		self.bt_answers.pack(side = tk.BOTTOM, fill = tk.X)
@@ -112,7 +121,8 @@ class EditFrame(tk.Frame):
 		self.bt_turns = tk.Button(self.right_frame, text = "B/W",  command = self._turns_on_click)
 		self.bt_turns.pack(side = tk.BOTTOM, fill = tk.X)
 		self.bt_turns.config(relief = tk.SUNKEN)
-		'''
+		
+		
 	def create_board(self):
 		#my_board = self.my_game.board
 		im_blnk = tk.PhotoImage(file='../Flash_Go/img/center.gif')
@@ -122,12 +132,12 @@ class EditFrame(tk.Frame):
 				# try only updating when board changes
 				
 				
-				lab = tk.Label(self.game_frame, image = im_blnk, text= "asdf", bd=0, width = 37)
+				lab = tk.Label(self.game_frame, image = im_blnk,  padx=0, pady=0, bd=0)
 				lab.image = im_blnk
 
 				# store the reference to label into here for future use
 				self.label_grid[i,j] = lab
-				lab.grid(row=i,column=j, ipadx = 0, ipady = 0, sticky = "EW")				
+				lab.grid(row=i,column=j, padx = (0, 0), pady = (0,0))
 				lab.bind('<Button-1>',lambda e,i=i,j=j: self._on_click(i,j,e))
 	
 	# second callback to change text of button while running for new game
@@ -186,10 +196,10 @@ class EditFrame(tk.Frame):
 	# All of these get new text values of the status bar
 	def _update_status(self):
 		new_text = self.game_state.brush.value
-		'''
+		
 		self.brush_mode_txt.set(new_text)
 		self.brush_mode_lab.config(textvariable = self.brush_mode_txt)
-		'''
+		
 
 	def _is_int(self, s):
 		try: 
@@ -289,7 +299,3 @@ class EditFrame(tk.Frame):
 			# Flip if not a pass
 			if (my_brush == moves.Brush('turns')):
 				self.game_state.flip_turns()
-
-#my_game_gui = Game_Gui(9)
-#my_game_gui.create_board()
-#my_game_gui.root.mainloop()
