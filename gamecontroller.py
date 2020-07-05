@@ -3,6 +3,7 @@
 
 import tkinter as tk
 import gameframe as gf
+import cardframe as cf
 
 
 LARGE_FONT= ("Verdana", 12)
@@ -21,7 +22,7 @@ class FlashGo(tk.Tk):
 		
 		self.frames = {}
 
-		for F in (StartPage, gf.EditFrame, FlashCards):
+		for F in (StartPage, gf.EditFrame, cf.CardFrame):
 			page_name = F.__name__
 			frame = F(container, self)
 			self.frames[page_name] = frame
@@ -36,37 +37,20 @@ class FlashGo(tk.Tk):
 		frame = self.frames[page_name]
 		#frame.tkraise()
 		frame.grid() 
-	
 
 class StartPage(tk.Frame):
 
 	def __init__(self, parent, controller):
 		tk.Frame.__init__(self,parent)
 		
-		label = tk.Label(self, text="Start Page", font=LARGE_FONT)
+		label = tk.Label(self, text="Welcome to FlashGo", font=LARGE_FONT)
 		label.pack(pady=10,padx=10, side = "top")
 
-		button = tk.Button(self, text="Test Flashcards", command=lambda: controller.show_frame("FlashCards"))
+		button = tk.Button(self, text="Go Problem Flashcards", command=lambda: controller.show_frame("CardFrame"))
 		button.pack()
 		
 		button2 = tk.Button(self, text="Edit Cards", command=lambda: controller.show_frame("EditFrame"))
 		button2.pack()
-
-
-class FlashCards(tk.Frame):
-
-	def __init__(self, parent, controller):
-		tk.Frame.__init__(self, parent)
-		label = tk.Label(self, text="FlashCards", font=LARGE_FONT)
-
-		label.pack(pady=10,padx=10)
-
-		button1 = tk.Button(self, text="Back to Home", command=lambda: controller.show_frame("StartPage"))
-		button1.pack()
-
-		button2 = tk.Button(self, text="Edit Cards", command=lambda: controller.show_frame("EditFrame"))
-		button2.pack()
-
 
 app = FlashGo()
 app.minsize(500, 100) #fix this somehow later 

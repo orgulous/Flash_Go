@@ -25,11 +25,19 @@ class EditFrame(tk.Frame):
 		self.parent = parent
 		self.controller = controller
 		
-		#self.game_root = tk.Frame(self.root)
-		
-		separator = ttk.Separator(self, orient='horizontal')
-		
-		
+		# text variables for the labels
+		self.brush_mode_txt = tk.StringVar()
+		self.brush_mode_lab = None
+
+		self.label_grid = np.ndarray(shape=(size,size), dtype=object)
+
+		self._init_frames()
+		self._add_nav_buttons(controller)
+		self.create_board()
+		self._pack_frames()
+		self._add_game_buttons()
+
+	def _init_frames(self):
 		# place these frames into the root
 		self.menu_frame = tk.Frame(self, bg = 'green')
 		self.top_frame = tk.Frame(self)
@@ -37,31 +45,9 @@ class EditFrame(tk.Frame):
 		self.bottom_frame = tk.Frame(self)
 		self.right_frame = tk.Frame(self)
 
-		# text variables for the labels
-		self.brush_mode_txt = tk.StringVar()
-		
-		# actual labels for storing info
-		self.brush_mode_lab = None
+		self.separator = ttk.Separator(self, orient='horizontal')
 
-		# stores references to each label for new update
-	
-		
-		
-		self.label_grid = np.ndarray(shape=(size,size), dtype=object)
-		
-		self._add_nav_buttons(controller)
-		
-		separator.pack(side='top', fill='x', pady=5)
-		
-		self.create_board()
-		
-		self._set_gui_values()
-		
-
-
-		
-		#self.game_frame.pack()
-
+	# does the 1st top part 
 	def _add_nav_buttons(self, controller):
 		self.menu_frame.pack(expand = True, fill = tk.X, padx = 20)
 		label = tk.Label(self.menu_frame, text="Mode: Editing Cards")
@@ -72,16 +58,14 @@ class EditFrame(tk.Frame):
 			command=lambda: controller.show_frame("StartPage"))
 		button1.pack(fill = tk.X, side = tk.LEFT)
 
-		button2 = tk.Button(self.menu_frame, text="Test Flashcards", command=lambda: controller.show_frame("FlashCards"))
+		button2 = tk.Button(self.menu_frame, text="Test Flashcards", command=lambda: controller.show_frame("CardFrame"))
 		button2.pack(side = tk.LEFT, fill = tk.X)
 		
+		self.separator.pack(side='top', fill='x', pady=5)
 
+	
 	# PACKS and sets values
-	def _set_gui_values(self):
-
-		# create root values
-		# self.root.title("Go Game")
-		# self.root.resizable(width = 0, height = 0)
+	def _pack_frames(self):
 
 		# tells how to pack the elements inside of the frame 
 		self.top_frame.pack(side = tk.TOP, fill = tk.X, padx = 20, pady = 10)
@@ -89,13 +73,11 @@ class EditFrame(tk.Frame):
 		self.game_frame.pack(padx = 20)
 		self.bottom_frame.pack(side = tk.BOTTOM, fill = tk.X)
 		
-		
 		self.brush_mode_txt.set("")
 		self.brush_mode_lab = tk.Label(self.bottom_frame, textvariable = self.brush_mode_txt, height = 3)
 		self.brush_mode_lab.pack(side = tk.LEFT, padx = 20)
-		
-		###############
-		
+
+	def _add_game_buttons(self):
 		# Add the new game button
 		self.bt = tk.Button(self.top_frame, text = "New Game", command = self._new_game_on_click)
 		self.bt.pack(side = tk.LEFT, fill = tk.X)
@@ -112,7 +94,6 @@ class EditFrame(tk.Frame):
 		self.bt_numbers = tk.Button(self.right_frame, text = "Numbers", command = self._variation_on_click)
 		self.bt_numbers.pack(side = tk.TOP, fill = tk.X)
 
-		
 		# Problem button
 		self.bt_answers = tk.Button(self.right_frame, text = "Answers",  command = self._answers_on_click)
 		self.bt_answers.pack(side = tk.BOTTOM, fill = tk.X)
@@ -120,18 +101,13 @@ class EditFrame(tk.Frame):
 		# B/W button
 		self.bt_turns = tk.Button(self.right_frame, text = "B/W",  command = self._turns_on_click)
 		self.bt_turns.pack(side = tk.BOTTOM, fill = tk.X)
-		self.bt_turns.config(relief = tk.SUNKEN)
-		
+		self.bt_turns.config(relief = tk.SUNKEN)	
 		
 	def create_board(self):
-		#my_board = self.my_game.board
 		im_blnk = tk.PhotoImage(file='../Flash_Go/img/center.gif')
 		
 		for i in range(self.size):
 			for j in range(self.size):
-				# try only updating when board changes
-				
-				
 				lab = tk.Label(self.game_frame, image = im_blnk,  padx=0, pady=0, bd=0)
 				lab.image = im_blnk
 
@@ -146,9 +122,6 @@ class EditFrame(tk.Frame):
 
 		self.game_state = moves.GameState()
 
-		#self.new_game_bt_txt.set("New Game")
-		self.turn = 'w'
-		
 		# store the reference to label into here for future use
 		for i in range(self.size):
 			for j in range(self.size):
@@ -179,14 +152,13 @@ class EditFrame(tk.Frame):
 		self.bt_turns.config(relief = tk.RAISED)
 		self.bt_answers.config(relief = tk.RAISED)
 		
-	
 	# Open an SGF file
 	def _open_on_click(self):
 		self._new_game_on_click()
 		self.game_state = moves.GameState()
 		
 		filename = filedialog.askopenfilename()
-		self.my_game = self.my_game._open_sgf(filename)
+		self.my_game = gm.open_sgf(filename)
 		self._gui_update()
 		
 	# stored action for new game on click

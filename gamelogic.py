@@ -1,6 +1,5 @@
 import numpy as np
 import moves
-import card
 from sgfmill import sgf, sgf_moves, ascii_boards
 from sgfmill import boards
 import copy
