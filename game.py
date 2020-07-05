@@ -97,6 +97,7 @@ def open_sgf(filename):
 	f = open(filename, "rb")
 	sgf_src = f.read()
 	f.close()
+	#print("Just read this sgf:", sgf_src)
 	sgf_game = sgf.Sgf_game.from_bytes(sgf_src)
 	board, plays = sgf_moves.get_setup_and_moves(sgf_game)
 	
@@ -130,7 +131,8 @@ def open_sgf(filename):
 			row = (new_game.board_sz - 1) - node_vals[0][0]
 			col = node_vals[0][1]
 			sym = node_vals[1]
-			print(sym, row, col)
+			# print("Printing label symbols in open_sgf")
+			# print(sym, row, col)
 			
 			my_array[row,col] = moves.GridSquare(row, col, sym, sz)
 	
