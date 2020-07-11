@@ -4,7 +4,8 @@ from tkinter import ttk
 import game as gm
 import moves 
 import numpy as np
-#import cardstack as cs
+import cardstack as cs
+import card as cd
 
 class CardFrame(tk.Frame):
 
@@ -15,12 +16,10 @@ class CardFrame(tk.Frame):
 		# game logic elements	
 		size = 9
 		self.size = size
-		self.my_game = gm.Game(size) # Game type
-		self.game_state = moves.GameState()
-		
-		# text variables for the labels
-		self.brush_mode_txt = tk.StringVar()
-		self.brush_mode_lab = None
+		self.my_game = None # Game type
+		self.card_stack = cs.CardStack()
+		self.my_card_f = None # A string
+		self.fam = None
 		
 		self.label_grid = np.ndarray(shape=(size,size), dtype=object)
 		
@@ -28,15 +27,10 @@ class CardFrame(tk.Frame):
 		self._add_nav_buttons(controller)
 		self.create_board()
 		self._pack_frames()
-		self._add_game_buttons()
 		self._add_time_buttons()
 		
 		# this should up set up the card state
-		#self.card_stack = cs.CardStack()
-		
-		# this gets and displays the top card
-		#self._display_card()
-		
+		self._update_stack()
 		self._update_board()
 		
 		
@@ -46,7 +40,7 @@ class CardFrame(tk.Frame):
 		self.top_frame = tk.Frame(self)
 		self.game_frame = tk.Frame(self, width = 200, bg = 'blue')
 		self.bottom_frame = tk.Frame(self)
-		#self.right_frame = tk.Frame(self)
+
 
 		self.separator = ttk.Separator(self, orient='horizontal')
 
@@ -74,32 +68,37 @@ class CardFrame(tk.Frame):
 		#self.right_frame.pack(side = tk.RIGHT, padx = 8)
 		self.game_frame.pack(padx = 20)
 		self.bottom_frame.pack(side = tk.BOTTOM, fill = tk.X)
-		
-		self.brush_mode_txt.set("")
-		self.brush_mode_lab = tk.Label(self.bottom_frame, textvariable = self.brush_mode_txt, height = 3)
-		self.brush_mode_lab.pack(side = tk.LEFT, padx = 20)
 
-	def _add_game_buttons(self):
-		
-		# B/W button
-		self.bt_turns = tk.Button(self.top_frame, text = "B/W",  command = print("Fix me"))
-		self.bt_turns.pack(side = tk.LEFT, fill = tk.X)
-		self.bt_turns.config(relief = tk.SUNKEN)	
-		
-	def temp(self):
-		pass
+
 	
 	def _add_time_buttons(self):
+		self.button1 = tk.Button(
+			self.bottom_frame, text="wrong",
+			state = "disabled",
+			command = lambda: self._set_familiarity(None))
+		self.button1.pack(fill = tk.X, side = tk.LEFT)
 	
-		button1 = tk.Button(self.bottom_frame, text="time_one", command = self.temp())
-		button1.pack(fill = tk.X, side = tk.LEFT)
+		self.button2 = tk.Button(
+			self.bottom_frame, text="ok",
+			state = "disabled",
+			command = lambda: self._set_familiarity("ok"))
+		self.button2.pack(fill = tk.X, side = tk.LEFT)
 		
-		button2 = tk.Button(self.bottom_frame, text="time_two", command = self.temp())
-		button2.pack(fill = tk.X, side = tk.LEFT)
+		self.button3 = tk.Button(
+			self.bottom_frame, text="good",
+			state = "disabled",
+			command = lambda: self._set_familiarity("good"))
+		self.button3.pack(fill = tk.X, side = tk.LEFT)
 		
-		button3 = tk.Button(self.bottom_frame, text="time_three", command = self.temp())
-		button3.pack(fill = tk.X, side = tk.LEFT)
+		self.button4 = tk.Button(
+			self.bottom_frame, text="great",
+			state = "disabled",
+			command = lambda: self._set_familiarity("great"))
+		self.button4.pack(fill = tk.X, side = tk.LEFT)
 		
+
+		
+
 	def create_board(self):
 		im_blnk = tk.PhotoImage(file='../Flash_Go/img/center.gif')
 		
@@ -112,12 +111,6 @@ class CardFrame(tk.Frame):
 				self.label_grid[i,j] = lab
 				lab.grid(row=i,column=j, padx = (0, 0), pady = (0,0))
 				lab.bind('<Button-1>',lambda e,i=i,j=j: self._on_click(i,j,e))
-		
-	
-	
-	def _on_click(self, i, j, event):
-		print(i, j)
-	
 	
 	def _is_int(self, s):
 		try: 
@@ -144,6 +137,7 @@ class CardFrame(tk.Frame):
 		elif symbol == 'answers':
 			label.config(text="‎✔", fg = "green", 
 				compound = 'center', font =('Helvetica', 20, 'bold'))	
+			#label.image = im_blnk
 		elif symbol == 'black':
 			label.configure(im = im_blck)
 			label.image = im_blck
@@ -170,6 +164,12 @@ class CardFrame(tk.Frame):
 				return True
 		except:
 			return False
+			
+	def _clear_labels(self):
+		for i in range(self.size):
+			for j in range(self.size):
+				label = self.label_grid[i,j]
+				label.config(text=str(""), compound = 'center')
 
 	# updates board. called when something happens to board
 	def _update_board(self):
@@ -179,40 +179,82 @@ class CardFrame(tk.Frame):
 		for i in range(self.size):
 			for j in range(self.size):
 				# only updates cell if changed. Otherwise takes too long
-				if self._board_changed(my_board, i, j) or len(self.my_game.board_hist) < 2:
 				
-					#print("Board changed at ", i , j)
-					self._alter_board_cell(my_board,i, j)
+				#if self._board_changed(my_board, i, j) or len(self.my_game.board_hist) < 2:
+				self._alter_board_cell(my_board,i, j)
 	
-
+	def _update_stack(self):
+		self._clear_labels()
+		self.my_game = gm.Game(self.size)
+	
+		self.my_card_f = self.card_stack.draw_from_hand()
+		filepath = "./sgf_files/" + self.my_card_f
+		self.my_game = gm.open_sgf(filepath)
+		
 	# turns the board game into the right one
 	def _gui_update(self):
+		if self.card_stack.get_len() != 0:
+			self._update_stack()
+		else: # make it so you can't click anymore
+			self.my_game = gm.Game(self.size)
+			self._clear_labels()
+			self.my_card_f = None
 		self._update_board()
-		#self._update_status()
-
+		
+	def _disable_buttons(self):
+		self.button1.configure(state='disabled')
+		self.button2.configure(state='disabled')
+		self.button3.configure(state='disabled')
+		self.button4.configure(state='disabled')
+		
+	def _change_buttons(self, correct):
+		if correct:
+			self.button2.configure(state='normal')
+			self.button3.configure(state='normal')
+			self.button4.configure(state='normal')
+		else:
+			self.button1.configure(state='normal')
+			
+	def _set_familiarity(self, fam):
+		self.fam = fam
+		print("this is my fam", fam)
+		self._disable_buttons()
+		self._gui_update()	
+	
 	# continue to wait for the event. This is the main updating loop
 	def _on_click(self, i, j, event):
 		print("~~~~~~~~~~~~~~~~~~~~~~")
 		
-		my_brush = self.game_state.brush
-
-		# calculated what symbol to used based on the state
-		symbol = moves.calc_symbol(self.game_state)
-		print("symbol just calculated:", symbol)
-			
-		grid_sq = moves.GridSquare(i, j, symbol, self.size)
+		#my_brush = self.game_state.brush
+		game_sym = self.my_game.get_symbol(i, j)
 		
-		# all logic on board updating is contained here
-		# takes the game board and then updates it.
-
-		successful_move = self.my_game.update(grid_sq, self.game_state) 
+		print("This is the symbol on the grid you clicked: ",
+			game_sym)
 		
-		if successful_move:
-			print("successful move at, ", grid_sq.np_x, grid_sq.np_y)
+		cs = self.card_stack
+		top_card = None
+		
+		try:
+			top_card = cd.Card(self.my_card_f)
+		
+			correct_answer = False
 			
-			self._gui_update()
-			
-			# Flip if not a pass
-			if (my_brush == moves.Brush('turns')):
-				self.game_state.flip_turns()
+			if game_sym == "answers":
+				print("the correct thing was pressed")
+				correct_answer = True
 
+			else:
+				print("you clicked the wrong place")
+				cs.reinsert_to_hand(top_card)
+			
+			# update game to reflect correct or wrong options next step
+			self._change_buttons(correct_answer)
+			
+			if self.fam is not None:
+				cs.reinsert_to_deck(top_card, self.fam)
+			
+		except:
+			print("The stack is empty")
+		
+		
+			

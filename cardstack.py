@@ -18,6 +18,9 @@ class CardStack:
 		
 		self._draw_files_hand()
 		
+	def get_len(self):
+		return len(self.hand_file_ls)
+		
 	# this should return the filenames of all the cards
 	def _load_json(self, json_f):
 		json_file = open("./json/card_data.json", "r+")

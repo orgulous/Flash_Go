@@ -29,6 +29,9 @@ class Game:
 
 		return my_array
 	
+	def get_symbol(self, i, j):
+		return self.board[i, j].symbol
+	
 	# method to return game tree
 	def save_game(self):
 		add_card(self.sgf_game)
@@ -57,6 +60,7 @@ class Game:
 
 	# the main entry point into board logic and board updating
 	def update(self, grid_sq, game_state):
+
 		if game_state.brush == moves.Brush('answers'):
 			clicked_sq = self.board[grid_sq.np_x, grid_sq.np_y]
 			if clicked_sq.is_blnk():
