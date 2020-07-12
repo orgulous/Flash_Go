@@ -47,6 +47,8 @@ class Card:
 			mins_add = 2 * (self.space_level + 1)
 		elif familiarity == 'great':
 			mins_add = 3 * (self.space_level + 1)
+		elif familiarity == 'wrong':
+			pass
 		else: 
 			raise ValueError
 			
@@ -56,6 +58,7 @@ class Card:
 	# date due field of Card object, and the Level
 	def incr_time(self, familiarity):
 	
+		print("incremeting the time")
 		dt_now = datetime.datetime.now()
 		dt_now_str = dt_now.strftime(
 			"%S-%M-%H_%d-%m-%Y")
@@ -71,6 +74,15 @@ class Card:
 		self.space_level += 1
 		self.date_last_reviewed = dt_now_str
 		
+		
+	def reset_prog(self):
+		new_dt = datetime.datetime.now()
+		new_dt_str = new_dt.strftime(
+			"%S-%M-%H_%d-%m-%Y")
+		
+		self.date_due = new_dt_str
+		self.space_level = 0
+		self.date_last_reviewed = new_dt_str
 		
 import unittest
 class TestStringMethods(unittest.TestCase):
@@ -89,7 +101,8 @@ class TestStringMethods(unittest.TestCase):
 		print("created", my_card.date_created)
 		print("level", my_card.space_level)
 		print("due", my_card.date_due)
-		
+	
+	# write a test for reset_prog
 
 if __name__ == '__main__':
 	unittest.main()

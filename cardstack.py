@@ -45,31 +45,55 @@ class CardStack:
 			if date_due_dt < datetime.datetime.now():
 				self.hand_file_ls.append(k)
 		 
-	# removes the top card of testing, and returns it
+	# removes the top card of testing, and returns a filename
+	# if empty list, return None
 	def draw_from_hand(self):
-		end_ind = len(self.hand_file_ls) - 1
-		card_filename = self.hand_file_ls.pop(end_ind)
-		return card_filename
+		if self.get_len() != 0:
+			end_ind = len(self.hand_file_ls) - 1
+			card_filename = self.hand_file_ls.pop(end_ind)
+			return card_filename
+		elif self.get_len() == 0:
+			return None
+		else:
+			ValueError
+
+		
+	def _update_json(self, card):
+		self.json_file = open(
+			"./json/card_data.json", "r+")
+			
+		# list of all sgf filenames in deck
+		self.json_values = self._load_json(self.json_file)
+	
+		card_f = card.filename
+		card_val = self.json_values[card_f]
+		
+		card_val['date_due'] = card.date_due
+		card_val['date_last_reviewed'] = card.date_last_reviewed
+		card_val['space_level'] = card.space_level
+		
+		self.json_file.seek(0) # go to beginning
+		json.dump(self.json_values, self.json_file)
+		self.json_file.close()
 		
 	# when the card is answered correctly
-	# update the time of it. Update the Json entry
 	def reinsert_to_deck(self, card, familiarity):
+		self.json_file = open(
+			"./json/card_data.json", "r+")
+			
+		# update the familiarity & json
 		card.incr_time(familiarity)
+		self._update_json(card)
 		
-		card_f = card.filename
-		card_to_insert = self.json_values[card_f]
-		
-		card_to_insert['date_due'] = card.date_due
-		card_to_insert['date_last_reviewed'] = card.date_last_reviewed
-		card_to_insert['space_level'] = card.space_level
-		
-		# self.hand_file_ls.remove(card_f)
+		# no need to reinsert into hand
+		# deck already updated
 	
 	# when the card is answered incorrectly
 	# adds the card to the bottom. Also resets time
 	def reinsert_to_hand(self, card):
+		card.reset_prog()
+		self._update_json(card)
 		self.hand_file_ls.insert(0, card.filename)
-		pass
 	
 import unittest
 class TestStringMethods(unittest.TestCase):

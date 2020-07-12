@@ -30,7 +30,7 @@ class CardFrame(tk.Frame):
 		self._add_time_buttons()
 		
 		# this should up set up the card state
-		self._update_stack()
+		self._swap_board()
 		self._update_board()
 		
 		
@@ -40,7 +40,6 @@ class CardFrame(tk.Frame):
 		self.top_frame = tk.Frame(self)
 		self.game_frame = tk.Frame(self, width = 200, bg = 'blue')
 		self.bottom_frame = tk.Frame(self)
-
 
 		self.separator = ttk.Separator(self, orient='horizontal')
 
@@ -59,7 +58,6 @@ class CardFrame(tk.Frame):
 		
 		self.separator.pack(side='top', fill='x', pady=5)
 		
-		
 	# PACKS and sets values
 	def _pack_frames(self):
 
@@ -69,34 +67,44 @@ class CardFrame(tk.Frame):
 		self.game_frame.pack(padx = 20)
 		self.bottom_frame.pack(side = tk.BOTTOM, fill = tk.X)
 
-
-	
 	def _add_time_buttons(self):
 		self.button1 = tk.Button(
 			self.bottom_frame, text="wrong",
 			state = "disabled",
-			command = lambda: self._set_familiarity(None))
+			command = lambda: self._wrong_ans_act())
 		self.button1.pack(fill = tk.X, side = tk.LEFT)
 	
 		self.button2 = tk.Button(
 			self.bottom_frame, text="ok",
 			state = "disabled",
-			command = lambda: self._set_familiarity("ok"))
+			command = lambda: self._right_ans_act("ok"))
 		self.button2.pack(fill = tk.X, side = tk.LEFT)
 		
 		self.button3 = tk.Button(
 			self.bottom_frame, text="good",
 			state = "disabled",
-			command = lambda: self._set_familiarity("good"))
+			command = lambda: self._right_ans_act("good"))
 		self.button3.pack(fill = tk.X, side = tk.LEFT)
 		
 		self.button4 = tk.Button(
 			self.bottom_frame, text="great",
 			state = "disabled",
-			command = lambda: self._set_familiarity("great"))
+			command = lambda: self._right_ans_act("great"))
 		self.button4.pack(fill = tk.X, side = tk.LEFT)
 		
-
+	def _disable_buttons(self):
+		self.button1.configure(state='disabled')
+		self.button2.configure(state='disabled')
+		self.button3.configure(state='disabled')
+		self.button4.configure(state='disabled')
+		
+	def _change_buttons(self, correct):
+		if correct == "right":
+			self.button2.configure(state='normal')
+			self.button3.configure(state='normal')
+			self.button4.configure(state='normal')
+		elif correct == "wrong":
+			self.button1.configure(state='normal')
 		
 
 	def create_board(self):
@@ -133,11 +141,9 @@ class CardFrame(tk.Frame):
 		
 		if self._is_int(symbol):
 			label.config(text=symbol, compound = 'center', font =('Helvetica', 18, 'bold'))
-		#print("bd_var_num ", bd_var_num)
 		elif symbol == 'answers':
 			label.config(text="‎✔", fg = "green", 
 				compound = 'center', font =('Helvetica', 20, 'bold'))	
-			#label.image = im_blnk
 		elif symbol == 'black':
 			label.configure(im = im_blck)
 			label.image = im_blck
@@ -173,88 +179,63 @@ class CardFrame(tk.Frame):
 
 	# updates board. called when something happens to board
 	def _update_board(self):
-		# get current status of board from my_game instance
 		my_board = self.my_game.board
 
 		for i in range(self.size):
 			for j in range(self.size):
-				# only updates cell if changed. Otherwise takes too long
-				
-				#if self._board_changed(my_board, i, j) or len(self.my_game.board_hist) < 2:
 				self._alter_board_cell(my_board,i, j)
 	
-	def _update_stack(self):
-		self._clear_labels()
+	def _swap_board(self):
 		self.my_game = gm.Game(self.size)
 	
 		self.my_card_f = self.card_stack.draw_from_hand()
-		filepath = "./sgf_files/" + self.my_card_f
-		self.my_game = gm.open_sgf(filepath)
+		if self.my_card_f != None:
+			self.top_card = cd.Card(self.my_card_f)
+			filepath = "./sgf_files/" + self.my_card_f
+			self.my_game = gm.open_sgf(filepath)
+		else:
+			print("no more cards in hand")
 		
 	# turns the board game into the right one
 	def _gui_update(self):
-		if self.card_stack.get_len() != 0:
-			self._update_stack()
-		else: # make it so you can't click anymore
-			self.my_game = gm.Game(self.size)
-			self._clear_labels()
-			self.my_card_f = None
+		self._clear_labels()
+		self.my_game = gm.Game(self.size)
+		self._swap_board()
 		self._update_board()
-		
-	def _disable_buttons(self):
-		self.button1.configure(state='disabled')
-		self.button2.configure(state='disabled')
-		self.button3.configure(state='disabled')
-		self.button4.configure(state='disabled')
-		
-	def _change_buttons(self, correct):
-		if correct:
-			self.button2.configure(state='normal')
-			self.button3.configure(state='normal')
-			self.button4.configure(state='normal')
-		else:
-			self.button1.configure(state='normal')
 			
-	def _set_familiarity(self, fam):
-		self.fam = fam
-		print("this is my fam", fam)
+	def _wrong_ans_act(self):	
+		# reset the card values
+		# reinsert the card to hand
+		
+		cs = self.card_stack
+		cs.reinsert_to_hand(self.top_card)
+		
 		self._disable_buttons()
-		self._gui_update()	
+		self._gui_update()
+
+	# need to wait for a button to fire to reinsert
+	def _right_ans_act(self, fam):
+		cs = self.card_stack
+		cs.reinsert_to_deck(self.top_card, fam)
+
+		self._disable_buttons()
+		self._gui_update()
 	
 	# continue to wait for the event. This is the main updating loop
 	def _on_click(self, i, j, event):
 		print("~~~~~~~~~~~~~~~~~~~~~~")
 		
-		#my_brush = self.game_state.brush
 		game_sym = self.my_game.get_symbol(i, j)
-		
 		print("This is the symbol on the grid you clicked: ",
 			game_sym)
 		
-		cs = self.card_stack
-		top_card = None
-		
-		try:
-			top_card = cd.Card(self.my_card_f)
-		
-			correct_answer = False
+		if game_sym == "answers":
+			print("the correct thing was pressed")
+			self._change_buttons("right")
 			
-			if game_sym == "answers":
-				print("the correct thing was pressed")
-				correct_answer = True
+		else:
+			print("you clicked the wrong place")
+			# update the buttons
+			self._change_buttons("wrong")
 
-			else:
-				print("you clicked the wrong place")
-				cs.reinsert_to_hand(top_card)
-			
-			# update game to reflect correct or wrong options next step
-			self._change_buttons(correct_answer)
-			
-			if self.fam is not None:
-				cs.reinsert_to_deck(top_card, self.fam)
-			
-		except:
-			print("The stack is empty")
-		
-		
-			
+
